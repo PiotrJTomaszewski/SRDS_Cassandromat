@@ -1,6 +1,5 @@
 package pl.pjtom.model;
 
-import java.time.LocalTime;
 import java.util.EnumMap;
 import java.util.UUID;
 
@@ -9,15 +8,17 @@ public class PostBox {
     private String district;
     private EnumMap<PackageSize, Integer> capacity = new EnumMap<>(PackageSize.class);
     private EnumMap<PackageSize, Integer> capacityLeft = new EnumMap<>(PackageSize.class);
-    private LocalTime openAt;
-    private LocalTime closeAt;
 
     public PostBox() {
 
     }
 
     public PostBox(String postboxID, String district, EnumMap<PackageSize, Integer> capacity,
-            EnumMap<PackageSize, Integer> capacityLeft, LocalTime openAt, LocalTime closeAt) {
+            EnumMap<PackageSize, Integer> capacityLeft) {
+        this.postboxID = postboxID;
+        this.district = district;
+        this.capacity = capacity;
+        this.capacityLeft = capacityLeft;
 
     }
 
@@ -55,22 +56,6 @@ public class PostBox {
 
     public void setCapacityLeft(PackageSize size, Integer count) {
         this.capacityLeft.put(size, count);
-    }
-
-    public LocalTime getOpenAt() {
-        return openAt;
-    }
-
-    public void setOpenAt(LocalTime openAt) {
-        this.openAt = openAt;
-    }
-
-    public LocalTime getCloseAt() {
-        return closeAt;
-    }
-
-    public void setCloseAt(LocalTime closeAt) {
-        this.closeAt = closeAt;
     }
 
 }

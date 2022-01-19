@@ -10,6 +10,7 @@ public class Package {
     private String clientID;
     private Instant plannedDeliveryDatetime;
     private Instant pickupDatetime;
+    private boolean isInWarehouse;
     private boolean isDelivered;
     private boolean isPickedUp;
 
@@ -81,7 +82,15 @@ public class Package {
         this.pickupDatetime = pickupDatetime;
     }
 
-    public boolean isDelivered() {
+    public boolean getIsInWarehouse() {
+        return isInWarehouse;
+    }
+
+    public void setIsInWarehouse(boolean isInWarehouse) {
+        this.isInWarehouse = isInWarehouse;
+    }
+
+    public boolean getIsDelivered() {
         return isDelivered;
     }
 
@@ -89,7 +98,7 @@ public class Package {
         this.isDelivered = isDelivered;
     }
 
-    public boolean isPickedUp() {
+    public boolean getIsPickedUp() {
         return isPickedUp;
     }
 

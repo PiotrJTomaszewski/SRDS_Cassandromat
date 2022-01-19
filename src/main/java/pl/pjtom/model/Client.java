@@ -34,4 +34,5 @@ public class Client {
     public void setDistrict(String district) {
         this.district = district;
     }
+
 }

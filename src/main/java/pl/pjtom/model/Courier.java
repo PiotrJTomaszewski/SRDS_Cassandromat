@@ -1,21 +1,22 @@
 package pl.pjtom.model;
 
-import java.time.LocalTime;
+import java.util.EnumMap;
 import java.util.UUID;
 
 public class Courier {
     private String courierID;
-    private LocalTime workdayStart;
-    private LocalTime workdayEnd;
+    private EnumMap<PackageSize, Integer> capacity = new EnumMap<>(PackageSize.class);
+    private EnumMap<PackageSize, Integer> capacityLeft = new EnumMap<>(PackageSize.class);
 
     public Courier() {
-        
+
     }
 
-    public Courier(String courierID, LocalTime workdayStart, LocalTime workdayEnd) {
+    public Courier(String courierID, EnumMap<PackageSize, Integer> capacity,
+            EnumMap<PackageSize, Integer> capacityLeft) {
         this.courierID = courierID;
-        this.workdayStart = workdayStart;
-        this.workdayEnd = workdayEnd;
+        this.capacity = capacity;
+        this.capacityLeft = capacityLeft;
     }
 
     public void generateCourierID() {
@@ -30,19 +31,20 @@ public class Courier {
         this.courierID = courierID;
     }
 
-    public LocalTime getWorkdayStart() {
-        return workdayStart;
+    public Integer getCapacity(PackageSize size) {
+        return capacity.get(size);
     }
 
-    public void setWorkdayStart(LocalTime workdayStart) {
-        this.workdayStart = workdayStart;
+    public void setCapacity(PackageSize size, Integer count) {
+        this.capacity.put(size, count);
     }
 
-    public LocalTime getWorkdayEnd() {
-        return workdayEnd;
+    public Integer getCapacityLeft(PackageSize size) {
+        return capacityLeft.get(size);
     }
 
-    public void setWorkdayEnd(LocalTime workdayEnd) {
-        this.workdayEnd = workdayEnd;
+    public void setCapacityLeft(PackageSize size, Integer count) {
+        this.capacityLeft.put(size, count);
     }
+
 }
