@@ -1,0 +1,80 @@
+version: "3"
+
+networks:
+  cassandra:
+
+services:
+  cass1:
+    image: cassandra:4.0.1
+    container_name: cass1
+    hostname: cass1
+    # mem_limit: 2g
+    privileged: true
+    healthcheck: &healthcheck
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+    deploy: &deploy
+      replicas: 1
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+    networks:
+      - cassandra
+    ports:
+    - "9042:9042"
+    volumes:
+      - ./data/cass1:/var/lib/cassandra
+      - ./etc/cass1:/etc/cassandra
+      - ./schema:/schema:ro
+    environment: &environment
+      CASSANDRA_SEEDS: "cass1,cass2"
+      CASSANDRA_CLUSTER_NAME: RealTimeBidding
+      CASSANDRA_DC: RealTimeBiddingDC
+      CASSANDRA_RACK: TheHighest
+      CASSANDRA_ENDPOINT_SNITCH: GossipingPropertyFileSnitch
+      CASSANDRA_NUM_TOKENS: 128
+      MAX_HEAP_SIZE: 1G
+      HEAP_NEWSIZE: 200M
+
+  cass2:
+    image: cassandra:4.0.1
+    container_name: cass2
+    hostname: cass2
+    # mem_limit: 2g
+    privileged: true
+    healthcheck: *healthcheck
+    deploy: *deploy
+    networks:
+      - cassandra
+    ports:
+      - "9043:9042"
+    volumes:
+      - ./data/cass2:/var/lib/cassandra
+      - ./etc/cass2:/etc/cassandra
+    environment: *environment
+    depends_on:
+      cass1:
+        condition: service_healthy
+
+  cass3:
+    image: cassandra:4.0.1
+    container_name: cass3
+    hostname: cass3
+    # mem_limit: 2g
+    privileged: true
+    healthcheck: *healthcheck
+    deploy: *deploy
+    networks:
+      - cassandra
+    ports:
+      - "9044:9042"
+    volumes:
+      - ./data/cass3:/var/lib/cassandra
+      - ./etc/cass3:/etc/cassandra
+    environment: *environment
+    depends_on:
+      cass2:
+        condition: service_healthy
