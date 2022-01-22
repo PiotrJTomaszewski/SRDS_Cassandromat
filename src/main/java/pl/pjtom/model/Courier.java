@@ -6,17 +6,14 @@ import java.util.UUID;
 public class Courier {
     private String courierID;
     private EnumMap<PackageSize, Integer> capacity = new EnumMap<>(PackageSize.class);
-    private EnumMap<PackageSize, Integer> capacityLeft = new EnumMap<>(PackageSize.class);
 
     public Courier() {
 
     }
 
-    public Courier(String courierID, EnumMap<PackageSize, Integer> capacity,
-            EnumMap<PackageSize, Integer> capacityLeft) {
+    public Courier(String courierID, EnumMap<PackageSize, Integer> capacity) {
         this.courierID = courierID;
         this.capacity = capacity;
-        this.capacityLeft = capacityLeft;
     }
 
     public void generateCourierID() {
@@ -37,14 +34,6 @@ public class Courier {
 
     public void setCapacity(PackageSize size, Integer count) {
         this.capacity.put(size, count);
-    }
-
-    public Integer getCapacityLeft(PackageSize size) {
-        return capacityLeft.get(size);
-    }
-
-    public void setCapacityLeft(PackageSize size, Integer count) {
-        this.capacityLeft.put(size, count);
     }
 
 }

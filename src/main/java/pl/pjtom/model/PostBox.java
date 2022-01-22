@@ -7,18 +7,15 @@ public class PostBox {
     private String postboxID;
     private String district;
     private EnumMap<PackageSize, Integer> capacity = new EnumMap<>(PackageSize.class);
-    private EnumMap<PackageSize, Integer> capacityLeft = new EnumMap<>(PackageSize.class);
 
     public PostBox() {
-
+        generatePostboxID();
     }
 
-    public PostBox(String postboxID, String district, EnumMap<PackageSize, Integer> capacity,
-            EnumMap<PackageSize, Integer> capacityLeft) {
+    public PostBox(String postboxID, String district, EnumMap<PackageSize, Integer> capacity) {
         this.postboxID = postboxID;
         this.district = district;
         this.capacity = capacity;
-        this.capacityLeft = capacityLeft;
 
     }
 
@@ -48,14 +45,6 @@ public class PostBox {
 
     public void setCapacity(PackageSize size, Integer count) {
         this.capacity.put(size, count);
-    }
-
-    public Integer getCapacityLeft(PackageSize size) {
-        return capacityLeft.get(size);
-    }
-
-    public void setCapacityLeft(PackageSize size, Integer count) {
-        this.capacityLeft.put(size, count);
     }
 
 }

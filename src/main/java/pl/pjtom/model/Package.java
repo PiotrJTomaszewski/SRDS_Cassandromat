@@ -1,33 +1,25 @@
 package pl.pjtom.model;
 
-import java.time.Instant;
+import java.util.Formatter;
 import java.util.UUID;
 
 public class Package {
     private String packageID;
-    private String destDistrict;
+    private String districtDest;
     private PackageSize size;
     private String clientID;
-    private Instant plannedDeliveryDatetime;
-    private Instant pickupDatetime;
-    private boolean isInWarehouse;
-    private boolean isDelivered;
-    private boolean isPickedUp;
+    private String courierID;
 
     public Package() {
 
     }
 
-    public Package(String packageID, String destDistrict, PackageSize size, String clientID,
-            Instant plannedDeliveryDatetime, Instant pickupDatetime, boolean isDelivered, boolean isPickedUp) {
+    public Package(String packageID, String courierID, String districtDest, PackageSize size, String clientID) {
         this.packageID = packageID;
-        this.destDistrict = destDistrict;
+        this.courierID = courierID;
+        this.districtDest = districtDest;
         this.size = size;
         this.clientID = clientID;
-        this.plannedDeliveryDatetime = plannedDeliveryDatetime;
-        this.pickupDatetime = pickupDatetime;
-        this.isDelivered = isDelivered;
-        this.isPickedUp = isPickedUp;
     }
 
     public void generatePackageID() {
@@ -42,12 +34,12 @@ public class Package {
         this.packageID = packageID;
     }
 
-    public String getDestDistrict() {
-        return destDistrict;
+    public String getDistrictDest() {
+        return districtDest;
     }
 
-    public void setDestDistrict(String destDistrict) {
-        this.destDistrict = destDistrict;
+    public void setDistrictDest(String districtDest) {
+        this.districtDest = districtDest;
     }
 
     public PackageSize getSize() {
@@ -66,44 +58,19 @@ public class Package {
         this.clientID = clientID;
     }
 
-    public Instant getPlannedDeliveryDatetime() {
-        return plannedDeliveryDatetime;
+    public String getCourierID() {
+        return courierID;
     }
 
-    public void setPlannedDeliveryDatetime(Instant plannedDeliveryDatetime) {
-        this.plannedDeliveryDatetime = plannedDeliveryDatetime;
+    public void setCourierID(String courierID) {
+        this.courierID = courierID;
     }
 
-    public Instant getPickupDatetime() {
-        return pickupDatetime;
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        Formatter fmt = new Formatter(sb);
+        fmt.format("{package_id: %s, courier_id: %s, district_dest: %s, size: %s, client_id: %s}", packageID, courierID, districtDest, size, clientID);
+        return sb.toString();
     }
-
-    public void setPickupDatetime(Instant pickupDatetime) {
-        this.pickupDatetime = pickupDatetime;
-    }
-
-    public boolean getIsInWarehouse() {
-        return isInWarehouse;
-    }
-
-    public void setIsInWarehouse(boolean isInWarehouse) {
-        this.isInWarehouse = isInWarehouse;
-    }
-
-    public boolean getIsDelivered() {
-        return isDelivered;
-    }
-
-    public void setDelivered(boolean isDelivered) {
-        this.isDelivered = isDelivered;
-    }
-
-    public boolean getIsPickedUp() {
-        return isPickedUp;
-    }
-
-    public void setPickedUp(boolean isPickedUp) {
-        this.isPickedUp = isPickedUp;
-    }
-
 }
