@@ -19,7 +19,7 @@ public class TemporaryMain {
         cassClient.connect("127.0.0.1", 9042, "Cassandromat");
         session = cassClient.getSession();
 
-        Courier courier = new Courier(cassClient);
+        Courier courier = new Courier(cassClient, true);
         courier.generateCourierID();
         ClientModel client = new ClientModel();
         client.generateClientID();

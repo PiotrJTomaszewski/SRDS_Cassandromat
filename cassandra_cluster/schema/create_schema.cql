@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS PostBox;
 DROP TABLE IF EXISTS Courier;
 DROP TABLE IF EXISTS PackageLog;
 DROP TABLE IF EXISTS WarehouseContent;
+DROP TABLE IF EXISTS CourierTrunkPackages;
 DROP TABLE IF EXISTS Client;
 
 CREATE TABLE PostBox (
@@ -45,6 +46,16 @@ CREATE TABLE WarehouseContent (
   size int,
   client_id text,
   PRIMARY KEY (package_id)
+);
+
+CREATE TABLE CourierTrunkPackages (
+  courier_id text,
+  package_id text,
+  district_dest text,
+  size int,
+  client_id text,
+  container_size int,
+  PRIMARY KEY (courier_id, package_id)
 );
 
 CREATE TABLE Client (
