@@ -2,15 +2,15 @@ package pl.pjtom.model;
 
 import java.util.UUID;
 
-public class Client {
+public class ClientModel {
     private String clientID;
     private String district;
 
-    public Client() {
+    public ClientModel() {
 
     }
 
-    public Client(String clientID, String district) {
+    public ClientModel(String clientID, String district) {
         this.clientID = clientID;
         this.district = district;
     }

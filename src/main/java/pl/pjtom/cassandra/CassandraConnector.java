@@ -9,7 +9,7 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Cluster.Builder;
 
-import pl.pjtom.model.Package;
+import pl.pjtom.model.PackageModel;
 import pl.pjtom.model.PackageSize;
 import pl.pjtom.model.PackageSizeException;
 
@@ -65,8 +65,8 @@ public class CassandraConnector {
         }
     }
 
-    private ArrayList<Package> getPackagesUsingQuery(BoundStatement bs) throws CassandraBackendException {
-        ArrayList<Package> packages = new ArrayList<>();
+    private ArrayList<PackageModel> getPackagesUsingQuery(BoundStatement bs) throws CassandraBackendException {
+        ArrayList<PackageModel> packages = new ArrayList<>();
 
         ResultSet rs = null;
         try {
@@ -75,7 +75,7 @@ public class CassandraConnector {
             throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
         }
         for (Row row: rs) {
-            Package p = new Package();
+            PackageModel p = new PackageModel();
             p.setPackageID(row.getString("package_id"));
             p.setCourierID(row.getString("courier_id"));
             p.setDistrictDest(row.getString("district_dest"));
@@ -90,13 +90,13 @@ public class CassandraConnector {
         return packages;
     }
 
-    public ArrayList<Package> getPackagesInWarehouse() throws CassandraBackendException {
+    public ArrayList<PackageModel> getPackagesInWarehouse() throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_WAREHOUSE);
         return getPackagesUsingQuery(bs);
         
     }
 
-    public Package getPackageInWarehouseByID(String packageID) throws CassandraBackendException {
+    public PackageModel getPackageInWarehouseByID(String packageID) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(SELECT_PACKAGE_IN_WAREHOUSE_BY_ID);
         bs.bind(packageID);
         ResultSet rs = null;
@@ -107,7 +107,7 @@ public class CassandraConnector {
         }
         Row row = rs.one();
         if (row != null) {
-            Package p = new Package();
+            PackageModel p = new PackageModel();
             p.setPackageID(row.getString("package_id"));
             p.setCourierID(row.getString("courier_id"));
             p.setDistrictDest(row.getString("district_dest"));
@@ -122,7 +122,7 @@ public class CassandraConnector {
         return null;
     }
 
-    public void upsertPackageInWarehouse(Package p) throws CassandraBackendException {
+    public void upsertPackageInWarehouse(PackageModel p) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(UPSERT_PACKAGE_IN_WAREHOUSE);
         try {
             bs.bind(

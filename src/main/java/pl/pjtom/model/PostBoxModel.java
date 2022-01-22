@@ -3,16 +3,16 @@ package pl.pjtom.model;
 import java.util.EnumMap;
 import java.util.UUID;
 
-public class PostBox {
+public class PostBoxModel {
     private String postboxID;
     private String district;
     private EnumMap<PackageSize, Integer> capacity = new EnumMap<>(PackageSize.class);
 
-    public PostBox() {
+    public PostBoxModel() {
         generatePostboxID();
     }
 
-    public PostBox(String postboxID, String district, EnumMap<PackageSize, Integer> capacity) {
+    public PostBoxModel(String postboxID, String district, EnumMap<PackageSize, Integer> capacity) {
         this.postboxID = postboxID;
         this.district = district;
         this.capacity = capacity;

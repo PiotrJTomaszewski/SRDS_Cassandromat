@@ -3,18 +3,18 @@ package pl.pjtom.model;
 import java.util.Formatter;
 import java.util.UUID;
 
-public class Package {
+public class PackageModel {
     private String packageID;
     private String districtDest;
     private PackageSize size;
     private String clientID;
     private String courierID;
 
-    public Package() {
+    public PackageModel() {
 
     }
 
-    public Package(String packageID, String courierID, String districtDest, PackageSize size, String clientID) {
+    public PackageModel(String packageID, String courierID, String districtDest, PackageSize size, String clientID) {
         this.packageID = packageID;
         this.courierID = courierID;
         this.districtDest = districtDest;

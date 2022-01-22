@@ -7,9 +7,8 @@ import com.datastax.driver.core.Session;
 
 import pl.pjtom.cassandra.CassandraBackendException;
 import pl.pjtom.cassandra.CassandraConnector;
-import pl.pjtom.model.Client;
-import pl.pjtom.model.Courier;
-import pl.pjtom.model.Package;
+import pl.pjtom.model.ClientModel;
+import pl.pjtom.model.PackageModel;
 import pl.pjtom.model.PackageSize;
 
 public class TemporaryMain {
@@ -22,10 +21,10 @@ public class TemporaryMain {
 
         Courier courier = new Courier(cassClient);
         courier.generateCourierID();
-        Client client = new Client();
+        ClientModel client = new ClientModel();
         client.generateClientID();
         
-        Package pack = new Package();
+        PackageModel pack = new PackageModel();
         pack.generatePackageID();
         pack.setClientID(client.getClientID());
         pack.setDistrictDest("Łazarz");
