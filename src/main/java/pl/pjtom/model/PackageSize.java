@@ -1,13 +1,11 @@
 package pl.pjtom.model;
 
-import pl.pjtom.cassandra.CassandraBackendException;
-
 public enum PackageSize {
     SMALL,
     MEDIUM,
     LARGE;
 
-    public static PackageSize fromInt(int size) {
+    public static PackageSize fromInt(int size) throws PackageSizeException {
         switch (size) {
             case 0:
                 return SMALL;
@@ -16,10 +14,10 @@ public enum PackageSize {
             case 2:
                 return LARGE;
         }
-        return null;
+        throw new PackageSizeException("Package size doesn't exist");
     }
 
-    public static int toInt(PackageSize size) {
+    public static int toInt(PackageSize size) throws PackageSizeException {
         switch (size) {
             case SMALL:
                 return 0;
@@ -28,6 +26,20 @@ public enum PackageSize {
             case LARGE:
                 return 2;
         }
-        return 0;
+        throw new PackageSizeException("Package size doesn't exist");
     }
+
+    public static PackageSize getBiggerSize(PackageSize size) throws PackageSizeException {
+        switch (size) {
+            case SMALL:
+                return MEDIUM;
+            case MEDIUM:
+                return LARGE;
+            default:
+                break;
+        }
+        throw new PackageSizeException("Package size doesn't exist");
+    }
+
+    
 }

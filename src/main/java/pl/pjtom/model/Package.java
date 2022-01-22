@@ -71,6 +71,7 @@ public class Package {
         StringBuilder sb = new StringBuilder();
         Formatter fmt = new Formatter(sb);
         fmt.format("{package_id: %s, courier_id: %s, district_dest: %s, size: %s, client_id: %s}", packageID, courierID, districtDest, size, clientID);
+        fmt.close();
         return sb.toString();
     }
 }

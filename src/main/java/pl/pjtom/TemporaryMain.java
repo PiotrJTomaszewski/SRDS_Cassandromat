@@ -1,6 +1,7 @@
 package pl.pjtom;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 
 import com.datastax.driver.core.Session;
 
@@ -19,7 +20,7 @@ public class TemporaryMain {
         cassClient.connect("127.0.0.1", 9042, "Cassandromat");
         session = cassClient.getSession();
 
-        Courier courier = new Courier();
+        Courier courier = new Courier(cassClient);
         courier.generateCourierID();
         Client client = new Client();
         client.generateClientID();
@@ -32,18 +33,6 @@ public class TemporaryMain {
 
         cassClient.upsertPackageInWarehouse(pack);
 
-        ArrayList<Package> packages = cassClient.getPackagesInWarehouse();
-        for (Package p: packages) {
-            if (p.getCourierID() == null) {
-                System.out.println(p.toString());
-                p.setCourierID(courier.getCourierID());
-                cassClient.upsertPackageInWarehouse(p);
-                Package check_package = cassClient.getPackageInWarehouseByID(p.getPackageID());
-                if (check_package != null && check_package.getCourierID() == courier.getCourierID()) {
-
-                } 
-
-            }
-        }
+        courier.loadTheTrunk();
     }
 }

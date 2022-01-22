@@ -11,6 +11,7 @@ import com.datastax.driver.core.Cluster.Builder;
 
 import pl.pjtom.model.Package;
 import pl.pjtom.model.PackageSize;
+import pl.pjtom.model.PackageSizeException;
 
 import com.datastax.driver.core.Session;
 
@@ -42,6 +43,7 @@ public class CassandraConnector {
     private static PreparedStatement SELECT_PACKAGES_IN_WAREHOUSE;
     private static PreparedStatement SELECT_PACKAGE_IN_WAREHOUSE_BY_ID;
     private static PreparedStatement UPSERT_PACKAGE_IN_WAREHOUSE;
+    private static PreparedStatement UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID;
     private static PreparedStatement DELETE_PACKAGE_FROM_WAREHOUSE_BY_ID;
 
     private static PreparedStatement SELECT_PACKAGES_IN_POSTBOX;
@@ -56,6 +58,7 @@ public class CassandraConnector {
             SELECT_PACKAGES_IN_WAREHOUSE = session.prepare("SELECT * FROM WarehouseContent;");
             SELECT_PACKAGE_IN_WAREHOUSE_BY_ID = session.prepare("SELECT * FROM WarehouseContent WHERE package_id = ?;");
             UPSERT_PACKAGE_IN_WAREHOUSE = session.prepare("INSERT INTO WarehouseContent (package_id, courier_id, district_dest, size, client_id) VALUES (?, ?, ?, ?, ?);");
+            UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID = session.prepare("UPDATE WarehouseContent USING TTL 15 SET courier_id = ? WHERE package_id = ?;");
             DELETE_PACKAGE_FROM_WAREHOUSE_BY_ID = session.prepare("DELETE FROM WarehouseContent WHERE package_id = ?;");
         } catch (Exception e) {
             throw new CassandraBackendException("Could not prepare statements. " + e.getMessage() + ".", e);
@@ -76,7 +79,11 @@ public class CassandraConnector {
             p.setPackageID(row.getString("package_id"));
             p.setCourierID(row.getString("courier_id"));
             p.setDistrictDest(row.getString("district_dest"));
-            p.setSize(PackageSize.fromInt(row.getInt("size")));
+            try {
+                p.setSize(PackageSize.fromInt(row.getInt("size")));
+            } catch (PackageSizeException e) {
+                throw new CassandraBackendException(e.getMessage());
+            }
             p.setClientID(row.getString("client_id"));
             packages.add(p);
         }
@@ -104,7 +111,11 @@ public class CassandraConnector {
             p.setPackageID(row.getString("package_id"));
             p.setCourierID(row.getString("courier_id"));
             p.setDistrictDest(row.getString("district_dest"));
-            p.setSize(PackageSize.fromInt(row.getInt("size")));
+            try {
+                p.setSize(PackageSize.fromInt(row.getInt("size")));
+            } catch (PackageSizeException e) {
+                throw new CassandraBackendException(e.getMessage());
+            }
             p.setClientID(row.getString("client_id"));
             return p;
         }
@@ -113,13 +124,17 @@ public class CassandraConnector {
 
     public void upsertPackageInWarehouse(Package p) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(UPSERT_PACKAGE_IN_WAREHOUSE);
-        bs.bind(
-            p.getPackageID(),
-            p.getCourierID(),
-            p.getDistrictDest(),
-            PackageSize.toInt(p.getSize()),
-            p.getClientID()
-        );
+        try {
+            bs.bind(
+                p.getPackageID(),
+                p.getCourierID(),
+                p.getDistrictDest(),
+                PackageSize.toInt(p.getSize()),
+                p.getClientID()
+            );
+        } catch (PackageSizeException e) {
+            throw new CassandraBackendException(e.getMessage());
+        }
 
         try {
             session.execute(bs);
@@ -128,9 +143,21 @@ public class CassandraConnector {
         }
     }
 
-    public void deletePackageFromWarehouseByID(Package p) throws CassandraBackendException {
+    public void updateCourierIDPackageInWarehouseByID(String packageID, String courierID) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID);
+        bs.bind(courierID, packageID);
+
+        try {
+            ResultSet a = session.execute(bs);
+            System.out.println(a);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void deletePackageFromWarehouseByID(String packageID) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(DELETE_PACKAGE_FROM_WAREHOUSE_BY_ID);
-        bs.bind(p.getPackageID());
+        bs.bind(packageID);
 
         try {
             session.execute(bs);
