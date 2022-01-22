@@ -1,15 +1,11 @@
 package pl.pjtom;
 
-import java.util.ArrayList;
-import java.util.EnumMap;
-
 import com.datastax.driver.core.Session;
 
 import pl.pjtom.cassandra.CassandraBackendException;
 import pl.pjtom.cassandra.CassandraConnector;
 import pl.pjtom.model.ClientModel;
 import pl.pjtom.model.PackageModel;
-import pl.pjtom.model.PackageSize;
 
 public class TemporaryMain {
     private Session session;
@@ -28,7 +24,6 @@ public class TemporaryMain {
         pack.generatePackageID();
         pack.setClientID(client.getClientID());
         pack.setDistrictDest("Łazarz");
-        pack.setSize(PackageSize.MEDIUM);
 
         cassClient.upsertPackageInWarehouse(pack);
 

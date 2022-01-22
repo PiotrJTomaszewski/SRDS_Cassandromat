@@ -6,7 +6,6 @@ import java.util.UUID;
 public class PackageModel {
     private String packageID;
     private String districtDest;
-    private PackageSize size;
     private String clientID;
     private String courierID;
 
@@ -14,11 +13,10 @@ public class PackageModel {
 
     }
 
-    public PackageModel(String packageID, String courierID, String districtDest, PackageSize size, String clientID) {
+    public PackageModel(String packageID, String courierID, String districtDest, String clientID) {
         this.packageID = packageID;
         this.courierID = courierID;
         this.districtDest = districtDest;
-        this.size = size;
         this.clientID = clientID;
     }
 
@@ -42,14 +40,6 @@ public class PackageModel {
         this.districtDest = districtDest;
     }
 
-    public PackageSize getSize() {
-        return size;
-    }
-
-    public void setSize(PackageSize size) {
-        this.size = size;
-    }
-
     public String getClientID() {
         return clientID;
     }
@@ -70,7 +60,7 @@ public class PackageModel {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         Formatter fmt = new Formatter(sb);
-        fmt.format("{package_id: %s, courier_id: %s, district_dest: %s, size: %s, client_id: %s}", packageID, courierID, districtDest, size, clientID);
+        fmt.format("{package_id: %s, courier_id: %s, district_dest: %s, client_id: %s}", packageID, courierID, districtDest, clientID);
         fmt.close();
         return sb.toString();
     }

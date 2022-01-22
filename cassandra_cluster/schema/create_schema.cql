@@ -8,15 +8,13 @@ DROP TABLE IF EXISTS PostBoxContent;
 DROP TABLE IF EXISTS Courier;
 DROP TABLE IF EXISTS PackageLog;
 DROP TABLE IF EXISTS WarehouseContent;
-DROP TABLE IF EXISTS CourierTrunkPackages;
+DROP TABLE IF EXISTS CourierTrunkContent;
 DROP TABLE IF EXISTS Client;
 
 CREATE TABLE PostBox (
   postbox_id text,
   district text,
-  capacity_S int,
-  capacity_M int,
-  capacity_L int,
+  capacity int,
   PRIMARY KEY (district, postbox_id)
 );
 
@@ -31,7 +29,6 @@ CREATE TABLE PostBox (
 CREATE TABLE PostBoxContent (
   postbox_id text,
   package_id text,
-  container_size int,
   client_id text,
   PRIMARY KEY (postbox_id, package_id)
 );
@@ -39,7 +36,6 @@ CREATE TABLE PostBoxContent (
 CREATE TABLE PackageLog (
   package_id text,
   district_dest text,
-  size int,
   client_id text,
   is_in_warehouse boolean,
   is_delivered boolean,
@@ -52,16 +48,14 @@ CREATE TABLE WarehouseContent (
   package_id text,
   courier_id text,
   district_dest text,
-  size int,
   client_id text,
   PRIMARY KEY (package_id)
 );
 
-CREATE TABLE CourierTrunkPackages (
+CREATE TABLE CourierTrunkContent (
   courier_id text,
   package_id text,
   district_dest text,
-  size int,
   client_id text,
   container_size int,
   PRIMARY KEY (courier_id, package_id)

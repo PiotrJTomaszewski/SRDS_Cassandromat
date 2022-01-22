@@ -6,19 +6,15 @@ import java.util.UUID;
 public class PostBoxModel {
     private String postboxID;
     private String district;
-    private EnumMap<PackageSize, Integer> capacity = new EnumMap<>(PackageSize.class);
+    private int capacity;
 
     public PostBoxModel() {
-        capacity.put(PackageSize.SMALL, -1);
-        capacity.put(PackageSize.MEDIUM, -1);
-        capacity.put(PackageSize.LARGE, -1);
+
     }
 
-    public PostBoxModel(String postboxID, String district, EnumMap<PackageSize, Integer> capacity) {
+    public PostBoxModel(String postboxID, String district) {
         this.postboxID = postboxID;
         this.district = district;
-        this.capacity = capacity;
-
     }
 
     public void generatePostboxID() {
@@ -41,12 +37,11 @@ public class PostBoxModel {
         this.district = district;
     }
 
-    public Integer getCapacity(PackageSize size) {
-        return capacity.get(size);
+    public int getCapacity() {
+        return capacity;
     }
 
-    public void setCapacity(PackageSize size, Integer count) {
-        this.capacity.put(size, count);
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
     }
-
 }

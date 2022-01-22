@@ -9,20 +9,19 @@ import java.util.Map.Entry;
 
 import pl.pjtom.cassandra.CassandraBackendException;
 import pl.pjtom.cassandra.CassandraConnector;
-import pl.pjtom.model.PackageSize;
 import pl.pjtom.model.PostBoxModel;
 import pl.pjtom.model.PackageModel;
 
 public class Courier {
     private CassandraConnector cassClient;
     private String courierID;
-    private EnumMap<PackageSize, Integer> capacity = new EnumMap<>(PackageSize.class);
-    private EnumMap<PackageSize, ArrayList<PackageModel>> claimedPackages = new EnumMap<>(PackageSize.class);
+    private int capacity;
+    private ArrayList<PackageModel> claimedPackages = new ArrayList<>();
     private Random rand = new Random();
 
     private void init() throws CassandraBackendException {
         // Trunk content survives system restarts
-        claimedPackages = cassClient.getPackagesInTrunkGroupByContainer(getCourierID());
+        claimedPackages = cassClient.getPackagesInTrunk(getCourierID());
     }
 
     public Courier(CassandraConnector cassClient, boolean generateID) throws CassandraBackendException {
@@ -30,13 +29,12 @@ public class Courier {
         if (generateID) {
             generateCourierID();
         }
-        capacity.put(PackageSize.SMALL, 10);
-        capacity.put(PackageSize.MEDIUM, 10);
-        capacity.put(PackageSize.LARGE, 10);
+        // TODO: Read from database
+        capacity = 10;
         init();
     }
 
-    public Courier(CassandraConnector cassClient, String courierID, EnumMap<PackageSize, Integer> capacity) throws CassandraBackendException {
+    public Courier(CassandraConnector cassClient, String courierID, int capacity) throws CassandraBackendException {
         this.cassClient = cassClient;
         this.courierID = courierID;
         this.capacity = capacity;
@@ -55,29 +53,29 @@ public class Courier {
         this.courierID = courierID;
     }
 
-    public Integer getCapacity(PackageSize size) {
-        return capacity.get(size);
+    public Integer getCapacity() {
+        return capacity;
     }
 
-    public void setCapacity(PackageSize size, Integer count) {
-        this.capacity.put(size, count);
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
     }
 
     public void loadTheTrunk() throws CassandraBackendException {
         boolean stayAtWarehouse = true;
+        int packagesInTrunkCount = 0;
         while (stayAtWarehouse) {
-            claimAndLoadPackages();
-            if (getFreeSpace(PackageSize.SMALL) == 0 && getFreeSpace(PackageSize.MEDIUM) == 0 && getFreeSpace(PackageSize.LARGE) == 0) {
+            claimAndLoadPackages(packagesInTrunkCount);
+            if (claimedPackages.size() + packagesInTrunkCount == capacity) {
                 System.out.println("Leaving the warehouse with a full trunk");
                 stayAtWarehouse = false;
             } else {
-                // Move claimed packages to the trunk
-                for (Entry<PackageSize, ArrayList<PackageModel>> entry: claimedPackages.entrySet()) {
-                    for (PackageModel p: entry.getValue()) {
-                        cassClient.upsertPackageInTrunk(p, entry.getKey());
-                    }
+                // Move successfully claimed packages to the trunk
+                for (PackageModel p: claimedPackages) {
+                    cassClient.upsertPackageInTrunk(p);
+                    packagesInTrunkCount += 1;
                 }
-                System.out.print("I have " + claimedPackages.get(PackageSize.SMALL).size() + "/" + capacity.get(PackageSize.SMALL) + " small, " + claimedPackages.get(PackageSize.MEDIUM).size() + "/" + capacity.get(PackageSize.MEDIUM) + ", medium and " + claimedPackages.get(PackageSize.LARGE).size() + "/" + capacity.get(PackageSize.LARGE) + " large packages.");
+                System.out.print("I have " + packagesInTrunkCount + "/" + capacity + " packages.");
                 if (rand.nextInt(100) < 30) {
                     System.out.println(" I'm leaving anyway");
                     stayAtWarehouse = false;
@@ -89,65 +87,24 @@ public class Courier {
                         System.out.println(e.getMessage());
                     }
                 }
+                claimedPackages.clear();
             }
-        }
-        for (PackageSize containerSize: PackageSize.values()) {
-            claimedPackages.get(containerSize).clear();
         }
     }
 
-    private void claimAndLoadPackages() throws CassandraBackendException {
-        // Get the list of free packages in warehouse sorted by size
+    private void claimAndLoadPackages(int packagesInTrunkCount) throws CassandraBackendException {
+        // Get the list of free packages in warehouse
         ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouse();
         // TODO: Couriers prefer different district on each trip
 
-        // Sort the free packages by size
-        EnumMap<PackageSize, ArrayList<PackageModel>> freePackagesBySize = new EnumMap<>(PackageSize.class);
-        for (PackageSize size: PackageSize.values()) {
-            freePackagesBySize.put(size, new ArrayList<PackageModel>());
-        }
+        // Claiming packages the courier wants to pick up
         for (PackageModel p: packages) {
             if (p.getCourierID() == null) {
-                freePackagesBySize.get(p.getSize()).add(p);
-            }
-        }
-
-        // Claiming packages the courier wants to pick up
-        for (PackageModel p: freePackagesBySize.get(PackageSize.LARGE)) {
-            ArrayList<PackageModel> container = claimedPackages.get(PackageSize.LARGE);
-            if (container.size() < capacity.get(PackageSize.LARGE)) {
-                cassClient.updateCourierIDPackageInWarehouseByID(p.getPackageID(), getCourierID());
-                container.add(p);
-            } else {
-                break;
-            }
-        }
-        packageLoop:
-        for (PackageModel p: freePackagesBySize.get(PackageSize.MEDIUM)) {
-            PackageSize[] sizesToTry = new PackageSize[]{PackageSize.MEDIUM, PackageSize.LARGE};
-            containerSizeLoop:
-            for (PackageSize containerSize: sizesToTry) {
-                ArrayList<PackageModel> container = claimedPackages.get(containerSize);
-                if (container.size() < capacity.get(containerSize)) {
+                if (packagesInTrunkCount + claimedPackages.size() < capacity) {
                     cassClient.updateCourierIDPackageInWarehouseByID(p.getPackageID(), getCourierID());
-                    container.add(p);
-                    break containerSizeLoop;
+                    claimedPackages.add(p);
                 } else {
-                    break packageLoop;
-                }
-            }
-        }
-        packageLoop:
-        for (PackageModel p: freePackagesBySize.get(PackageSize.SMALL)) {
-            PackageSize[] sizesToTry = new PackageSize[]{PackageSize.SMALL, PackageSize.MEDIUM, PackageSize.LARGE};
-            containerSizeLoop:
-            for (PackageSize containerSize: sizesToTry) {
-                ArrayList<PackageModel> container = claimedPackages.get(containerSize);
-                if (container.size() < capacity.get(containerSize)) {
-                    cassClient.updateCourierIDPackageInWarehouseByID(p.getPackageID(), getCourierID());
-                    break containerSizeLoop;
-                } else {
-                    break packageLoop;
+                    break;
                 }
             }
         }
@@ -158,33 +115,21 @@ public class Courier {
             e.getMessage();
         }
 
-        for (PackageSize containerSize: PackageSize.values()) {
-            for (PackageModel p: claimedPackages.get(containerSize)) {
-                PackageModel checkPackage = cassClient.getPackageInWarehouseByID(p.getPackageID());
-                if (checkPackage != null && checkPackage.getCourierID().equals(getCourierID())) {
-                    p.setCourierID(getCourierID());
-                    System.out.println("I'm taking package " + p.getPackageID() + ".");
-                    cassClient.upsertPackageInTrunk(p, containerSize);
-                    cassClient.deletePackageFromWarehouseByID(p.getPackageID());
-                } else {
-                    System.out.println("Someone else took the package " + p.getPackageID() + ".");
-                }
+        for (PackageModel p: claimedPackages) {
+            PackageModel checkPackage = cassClient.getPackageInWarehouseByID(p.getPackageID());
+            if (checkPackage != null && checkPackage.getCourierID().equals(getCourierID())) {
+                p.setCourierID(getCourierID());
+                System.out.println("I'm taking package " + p.getPackageID() + ".");
+                cassClient.upsertPackageInTrunk(p);
+                cassClient.deletePackageFromWarehouseByID(p.getPackageID());
+            } else {
+                System.out.println("Someone else took the package " + p.getPackageID() + ".");
             }
         }
     }
 
-    private int getFreeSpace(PackageSize containerSize) {
-        return capacity.get(containerSize) - claimedPackages.get(containerSize).size();
-    }
-
     public void placePackagesInPostBox(String postboxID) throws CassandraBackendException {
-        EnumMap<PackageSize, ArrayList<PackageModel>> packagesInTrunk = cassClient.getPackagesInTrunkGroupByPackageSize(getCourierID());
-            for (Map.Entry<PackageSize, ArrayList<PackageModel>> entry: packagesInTrunk.entrySet()) {
-                for (PackageModel p: entry.getValue()) {
-
-                }
-                // cassClient.upsertPackageInPostBox(, containerSize);
-            }
+        ArrayList<PackageModel> packagesInTrunk = cassClient.getPackagesInTrunk(getCourierID());
     }
 
 }
