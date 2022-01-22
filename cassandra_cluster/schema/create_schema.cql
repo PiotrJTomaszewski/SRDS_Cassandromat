@@ -4,6 +4,7 @@ CREATE KEYSPACE IF NOT EXISTS Cassandromat
 USE Cassandromat;
 
 DROP TABLE IF EXISTS PostBox;
+DROP TABLE IF EXISTS PostBoxContent;
 DROP TABLE IF EXISTS Courier;
 DROP TABLE IF EXISTS PackageLog;
 DROP TABLE IF EXISTS WarehouseContent;
@@ -26,6 +27,14 @@ CREATE TABLE PostBox (
 --   capacity_L int,
 --   PRIMARY KEY (courier_id)
 -- );
+
+CREATE TABLE PostBoxContent (
+  postbox_id text,
+  package_id text,
+  container_size int,
+  client_id text,
+  PRIMARY KEY (postbox_id, package_id)
+);
 
 CREATE TABLE PackageLog (
   package_id text,

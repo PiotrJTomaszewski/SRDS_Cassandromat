@@ -9,7 +9,9 @@ public class PostBoxModel {
     private EnumMap<PackageSize, Integer> capacity = new EnumMap<>(PackageSize.class);
 
     public PostBoxModel() {
-        generatePostboxID();
+        capacity.put(PackageSize.SMALL, -1);
+        capacity.put(PackageSize.MEDIUM, -1);
+        capacity.put(PackageSize.LARGE, -1);
     }
 
     public PostBoxModel(String postboxID, String district, EnumMap<PackageSize, Integer> capacity) {

@@ -13,6 +13,7 @@ import com.datastax.driver.core.Cluster.Builder;
 import pl.pjtom.model.PackageModel;
 import pl.pjtom.model.PackageSize;
 import pl.pjtom.model.PackageSizeException;
+import pl.pjtom.model.PostBoxModel;
 
 import com.datastax.driver.core.Session;
 
@@ -51,8 +52,11 @@ public class CassandraConnector {
     private static PreparedStatement UPSERT_PACKAGE_IN_TRUNK;
     private static PreparedStatement DELETE_PACKAGES_IN_TRUNK_BY_ID;
 
+    private static PreparedStatement SELECT_POSTBOXES_IN_DISTRICT;
+    private static PreparedStatement UPSERT_POSTBOX;
+
     private static PreparedStatement SELECT_PACKAGES_IN_POSTBOX;
-    private static PreparedStatement INSERT_PACKAGE_INTO_POSTBOX;
+    private static PreparedStatement UPSERT_PACKAGE_IN_POSTBOX;
     private static PreparedStatement DELETE_PACKAGE_FROM_POSTBOX;
 
     private static PreparedStatement SELECT_PACKAGE_LOG;
@@ -69,6 +73,13 @@ public class CassandraConnector {
             SELECT_PACKAGES_IN_TRUNK_BY_ID = session.prepare("SELECT * FROM CourierTrunkPackages WHERE courier_id = ?;");
             UPSERT_PACKAGE_IN_TRUNK = session.prepare("INSERT INTO CourierTrunkPackages (courier_id, package_id, district_dest, size, client_id, container_size) VALUES (?, ?, ?, ?, ?, ?);");
             DELETE_PACKAGES_IN_TRUNK_BY_ID = session.prepare("DELETE FROM CourierTrunkPackages WHERE courier_id = ? AND package_id = ?;");
+
+            SELECT_POSTBOXES_IN_DISTRICT = session.prepare("SELECT * FROM PostBox WHERE district = ?;");
+            UPSERT_POSTBOX = session.prepare("INSERT INTO PostBox (postbox_id, district, capacity_S, capacity_M, capacity_L) VALUES (?, ?, ?, ?, ?);");
+
+            SELECT_PACKAGES_IN_POSTBOX = session.prepare("SELECT * FROM PostBoxContent WHERE postbox_id = ?;");
+            UPSERT_PACKAGE_IN_POSTBOX = session.prepare("INSERT INTO PostBoxContent (postbox_id, package_id, container_size, client_id) VALUES (?, ?, ?, ?);");
+            DELETE_PACKAGE_FROM_POSTBOX = session.prepare("DELETE FROM PostBoxContent WHERE postbox_id = ? AND package_id = ?;");
 
         } catch (Exception e) {
             throw new CassandraBackendException("Could not prepare statements. " + e.getMessage() + ".", e);
@@ -176,7 +187,7 @@ public class CassandraConnector {
         }
     }
 
-    public EnumMap<PackageSize, ArrayList<PackageModel>> getPackagesInTrunk(String courierID) throws CassandraBackendException {
+    public EnumMap<PackageSize, ArrayList<PackageModel>> getPackagesInTrunkGroupByContainer(String courierID) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_TRUNK_BY_ID);
         bs.bind(courierID);
         ResultSet rs = null;
@@ -210,6 +221,35 @@ public class CassandraConnector {
         return packages;
     }
 
+    public EnumMap<PackageSize, ArrayList<PackageModel>> getPackagesInTrunkGroupByPackageSize(String courierID) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_TRUNK_BY_ID);
+        bs.bind(courierID);
+        ResultSet rs = null;
+        try {
+            rs = session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+        }
+        Row row = rs.one();
+        EnumMap<PackageSize, ArrayList<PackageModel>> packages = new EnumMap<>(PackageSize.class);
+        packages.put(PackageSize.SMALL, new ArrayList<PackageModel>());
+        packages.put(PackageSize.MEDIUM, new ArrayList<PackageModel>());
+        packages.put(PackageSize.LARGE, new ArrayList<PackageModel>());
+        if (row != null) {
+            PackageModel p = new PackageModel();
+            p.setCourierID(row.getString("courier_id"));
+            p.setPackageID(row.getString("package_id"));
+            p.setDistrictDest(row.getString("district_dest"));
+            p.setClientID(row.getString("client_id"));
+            try {
+                packages.get(PackageSize.fromInt(row.getInt("size"))).add(p);
+            } catch (PackageSizeException e) {
+                throw new CassandraBackendException(e.getMessage());
+            }
+        }
+        return packages;
+    }
+
     public void upsertPackageInTrunk(PackageModel p, PackageSize containerSize) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(UPSERT_PACKAGE_IN_TRUNK);
         try {
@@ -235,6 +275,105 @@ public class CassandraConnector {
     public void deletePackageFromTrunkByID(String courierID, String packageID) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(DELETE_PACKAGES_IN_TRUNK_BY_ID);
         bs.bind(courierID, packageID);
+
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public ArrayList<PostBoxModel> getPostBoxesInDistrict(String district) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(SELECT_POSTBOXES_IN_DISTRICT);
+        bs.bind(district);
+        ResultSet rs = null;
+        try {
+            rs = session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+        }
+
+        ArrayList<PostBoxModel> postboxes = new ArrayList<PostBoxModel>();
+        Row row = rs.one();
+        if (row != null) {
+            PostBoxModel postbox = new PostBoxModel();
+            postbox.setPostboxID(row.getString("postbox_id "));
+            postbox.setDistrict(row.getString("district"));
+            postbox.setCapacity(PackageSize.SMALL, row.getInt("capacity_S"));
+            postbox.setCapacity(PackageSize.MEDIUM, row.getInt("capacity_M"));
+            postbox.setCapacity(PackageSize.LARGE, row.getInt("capacity_L"));
+            postboxes.add(postbox);
+        }
+        return postboxes;
+    }
+
+    public void upsertPostbox(PostBoxModel postbox) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(UPSERT_POSTBOX);
+        bs.bind(
+            postbox.getPostboxID(),
+            postbox.getDistrict(),
+            postbox.getCapacity(PackageSize.SMALL),
+            postbox.getCapacity(PackageSize.MEDIUM),
+            postbox.getCapacity(PackageSize.LARGE)
+        );
+
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public EnumMap<PackageSize, ArrayList<PackageModel>> getPackagesInPostBox(String postBoxID) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_POSTBOX);
+        bs.bind(postBoxID);
+        ResultSet rs = null;
+        try {
+            rs = session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+        }
+        Row row = rs.one();
+        EnumMap<PackageSize, ArrayList<PackageModel>> packages = new EnumMap<>(PackageSize.class);
+        packages.put(PackageSize.SMALL, new ArrayList<PackageModel>());
+        packages.put(PackageSize.MEDIUM, new ArrayList<PackageModel>());
+        packages.put(PackageSize.LARGE, new ArrayList<PackageModel>());
+        if (row != null) {
+            PackageModel p = new PackageModel();
+            p.setPackageID(row.getString("package_id"));
+            p.setPackageID(row.getString("client_id"));
+            try {
+                packages.get(PackageSize.fromInt(row.getInt("container_size"))).add(p);
+            } catch (PackageSizeException e) {
+                throw new CassandraBackendException(e);
+            }
+        }
+        return packages;
+    }
+
+    public void upsertPackageInPostBox(PackageModel p, PackageSize containerSize) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(UPSERT_PACKAGE_IN_TRUNK);
+        try {
+            bs.bind(
+                p.getCourierID(),
+                p.getPackageID(),
+                PackageSize.toInt(containerSize),
+                p.getClientID()
+            );
+        } catch (PackageSizeException e) {
+            throw new CassandraBackendException(e.getMessage());
+        }
+
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void deletePackageFromPostBox(String postBoxID, String packageID) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(DELETE_PACKAGES_IN_TRUNK_BY_ID);
+        bs.bind(postBoxID, packageID);
 
         try {
             session.execute(bs);

@@ -2,6 +2,7 @@ package pl.pjtom;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 import java.util.Map.Entry;
@@ -9,6 +10,7 @@ import java.util.Map.Entry;
 import pl.pjtom.cassandra.CassandraBackendException;
 import pl.pjtom.cassandra.CassandraConnector;
 import pl.pjtom.model.PackageSize;
+import pl.pjtom.model.PostBoxModel;
 import pl.pjtom.model.PackageModel;
 
 public class Courier {
@@ -20,7 +22,7 @@ public class Courier {
 
     private void init() throws CassandraBackendException {
         // Trunk content survives system restarts
-        claimedPackages = cassClient.getPackagesInTrunk(getCourierID());
+        claimedPackages = cassClient.getPackagesInTrunkGroupByContainer(getCourierID());
     }
 
     public Courier(CassandraConnector cassClient, boolean generateID) throws CassandraBackendException {
@@ -173,6 +175,16 @@ public class Courier {
 
     private int getFreeSpace(PackageSize containerSize) {
         return capacity.get(containerSize) - claimedPackages.get(containerSize).size();
+    }
+
+    public void placePackagesInPostBox(String postboxID) throws CassandraBackendException {
+        EnumMap<PackageSize, ArrayList<PackageModel>> packagesInTrunk = cassClient.getPackagesInTrunkGroupByPackageSize(getCourierID());
+            for (Map.Entry<PackageSize, ArrayList<PackageModel>> entry: packagesInTrunk.entrySet()) {
+                for (PackageModel p: entry.getValue()) {
+
+                }
+                // cassClient.upsertPackageInPostBox(, containerSize);
+            }
     }
 
 }
