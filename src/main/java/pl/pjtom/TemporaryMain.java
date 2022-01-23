@@ -6,6 +6,7 @@ import pl.pjtom.cassandra.CassandraBackendException;
 import pl.pjtom.cassandra.CassandraConnector;
 import pl.pjtom.model.ClientModel;
 import pl.pjtom.model.PackageModel;
+import pl.pjtom.model.PostBoxModel;
 
 public class TemporaryMain {
     private Session session;
@@ -15,6 +16,10 @@ public class TemporaryMain {
         cassClient.connect("127.0.0.1", 9042, "Cassandromat");
         session = cassClient.getSession();
 
+        cassClient.upsertDistrict("Łazarz");
+        cassClient.upsertDistrict("Grunwald");
+        cassClient.upsertDistrict("Wilda");
+
         Courier courier = new Courier(cassClient, true);
         courier.generateCourierID();
         ClientModel client = new ClientModel();
@@ -23,10 +28,17 @@ public class TemporaryMain {
         PackageModel pack = new PackageModel();
         pack.generatePackageID();
         pack.setClientID(client.getClientID());
-        pack.setDistrictDest("Łazarz");
+        pack.setDistrictDest("Grunwald");
+
+        PostBoxModel postBox = new PostBoxModel();
+        postBox.generatePostboxID();
+        postBox.setCapacity(10);
+        postBox.setDistrict("Grunwald");
+        cassClient.upsertPostbox(postBox);
 
         cassClient.upsertPackageInWarehouse(pack);
 
         courier.loadTheTrunk();
+        courier.deliverPackages();
     }
 }

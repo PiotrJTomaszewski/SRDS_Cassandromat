@@ -10,6 +10,7 @@ DROP TABLE IF EXISTS PackageLog;
 DROP TABLE IF EXISTS WarehouseContent;
 DROP TABLE IF EXISTS CourierTrunkContent;
 DROP TABLE IF EXISTS Client;
+DROP TABLE IF EXISTS District;
 
 CREATE TABLE PostBox (
   postbox_id text,
@@ -30,6 +31,7 @@ CREATE TABLE PostBoxContent (
   postbox_id text,
   package_id text,
   client_id text,
+  is_ready_to_pickup boolean,
   PRIMARY KEY (postbox_id, package_id)
 );
 
@@ -65,4 +67,9 @@ CREATE TABLE Client (
   client_id text,
   district text,
   PRIMARY KEY (client_id)
+);
+
+CREATE TABLE District (
+  district text,
+  PRIMARY KEY (district)
 );

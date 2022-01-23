@@ -8,16 +8,10 @@ public class PackageModel {
     private String districtDest;
     private String clientID;
     private String courierID;
+    private boolean isReadyToPickup;
 
     public PackageModel() {
 
-    }
-
-    public PackageModel(String packageID, String courierID, String districtDest, String clientID) {
-        this.packageID = packageID;
-        this.courierID = courierID;
-        this.districtDest = districtDest;
-        this.clientID = clientID;
     }
 
     public void generatePackageID() {
@@ -56,11 +50,19 @@ public class PackageModel {
         this.courierID = courierID;
     }
 
+    public boolean getIsReadyToPickup() {
+        return isReadyToPickup;
+    }
+
+    public void setIsReadyToPickup(boolean isReadyToPickup) {
+        this.isReadyToPickup = isReadyToPickup;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
         Formatter fmt = new Formatter(sb);
-        fmt.format("{package_id: %s, courier_id: %s, district_dest: %s, client_id: %s}", packageID, courierID, districtDest, clientID);
+        fmt.format("{package_id: %s, courier_id: %s, district_dest: %s, client_id: %s, is_ready_to_pickup: %s}", packageID, courierID, districtDest, clientID, isReadyToPickup);
         fmt.close();
         return sb.toString();
     }

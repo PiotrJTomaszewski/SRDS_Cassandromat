@@ -1,10 +1,9 @@
 package pl.pjtom.model;
 
-import java.util.EnumMap;
 import java.util.UUID;
 
 public class PostBoxModel {
-    private String postboxID;
+    private String postBoxID;
     private String district;
     private int capacity;
 
@@ -13,20 +12,20 @@ public class PostBoxModel {
     }
 
     public PostBoxModel(String postboxID, String district) {
-        this.postboxID = postboxID;
+        this.postBoxID = postboxID;
         this.district = district;
     }
 
     public void generatePostboxID() {
-        this.postboxID = UUID.randomUUID().toString();
+        this.postBoxID = UUID.randomUUID().toString();
     }
 
-    public String getPostboxID() {
-        return postboxID;
+    public String getPostBoxID() {
+        return postBoxID;
     }
 
     public void setPostboxID(String postboxID) {
-        this.postboxID = postboxID;
+        this.postBoxID = postboxID;
     }
 
     public String getDistrict() {

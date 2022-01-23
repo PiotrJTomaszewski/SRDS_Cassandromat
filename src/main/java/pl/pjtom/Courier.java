@@ -1,8 +1,10 @@
 package pl.pjtom;
 
+import java.lang.StackWalker.Option;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 import java.util.Map.Entry;
@@ -76,7 +78,7 @@ public class Courier {
                     packagesInTrunkCount += 1;
                 }
                 System.out.print("I have " + packagesInTrunkCount + "/" + capacity + " packages.");
-                if (rand.nextInt(100) < 30) {
+                if (packagesInTrunkCount > 0 && rand.nextInt(100) < 30) {
                     System.out.println(" I'm leaving anyway");
                     stayAtWarehouse = false;
                 } else {
@@ -95,11 +97,13 @@ public class Courier {
     private void claimAndLoadPackages(int packagesInTrunkCount) throws CassandraBackendException {
         // Get the list of free packages in warehouse
         ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouse();
-        // TODO: Couriers prefer different district on each trip
+        ArrayList<String> districts = cassClient.getDistricts();
+        String destinationDistrict = districts.get(rand.nextInt(districts.size()));
+        System.out.println("Going to the " + destinationDistrict + " district.");
 
         // Claiming packages the courier wants to pick up
         for (PackageModel p: packages) {
-            if (p.getCourierID() == null) {
+            if (p.getCourierID() == null && p.getDistrictDest().equals(destinationDistrict)) {
                 if (packagesInTrunkCount + claimedPackages.size() < capacity) {
                     cassClient.updateCourierIDPackageInWarehouseByID(p.getPackageID(), getCourierID());
                     claimedPackages.add(p);
@@ -128,8 +132,72 @@ public class Courier {
         }
     }
 
-    public void placePackagesInPostBox(String postboxID) throws CassandraBackendException {
+    private Optional<PostBoxModel> findFreePostBox(String district) throws CassandraBackendException {
+        ArrayList<PostBoxModel> postBoxes = cassClient.getPostBoxesInDistrict(district);
+        for (PostBoxModel postBox: postBoxes) {
+            int postBoxPackagesCount = cassClient.countPackagesInPostBox(postBox.getPostBoxID());
+            if (postBoxPackagesCount < postBox.getCapacity()) {
+                return Optional.of(postBox);
+            }
+        }
+        return Optional.empty();
+    }
+
+    public void deliverPackages() throws CassandraBackendException {        
         ArrayList<PackageModel> packagesInTrunk = cassClient.getPackagesInTrunk(getCourierID());
+        ArrayList<PackageModel> packagesToClaim = new ArrayList<>();
+        packagesToClaim.addAll(packagesInTrunk);
+        String district = packagesInTrunk.get(0).getDistrictDest();
+        while (packagesInTrunk.size() > 0) {
+            Optional<PostBoxModel> freePostBox = findFreePostBox(district);
+
+            if (freePostBox.isPresent()) {
+                // Packages for which a space in a post box was claimed
+                ArrayList<PackageModel> claimedPackages = new ArrayList<PackageModel>();
+                PostBoxModel postBox = freePostBox.get();
+                for (PackageModel p: packagesToClaim) {
+                    p.setIsReadyToPickup(false);
+                    cassClient.upsertPackageInPostBox(postBox.getPostBoxID(), p);
+                    claimedPackages.add(p);
+                    System.out.println("Claimed space in " + postBox.getPostBoxID() + " for " + p.getPackageID() + ".");
+                }
+                packagesToClaim.removeAll(claimedPackages);
+
+                System.out.println("Traveling to the post box " + postBox.getPostBoxID() + ".");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                int packagesToUnclaimCount = cassClient.countPackagesInPostBox(postBox.getPostBoxID()) - postBox.getCapacity();
+                if (packagesToUnclaimCount > 0) { // Post box is full
+                    System.out.println("Postbox " + postBox.getPostBoxID() + " is full. I have to unclaim" + packagesToUnclaimCount + " packages.");
+                    // Unclaim packages that wouldn't fit
+                    for (int i=0; i<packagesToUnclaimCount && i<claimedPackages.size(); i++) {
+                        int packageToUnclaimIndex = claimedPackages.size() - 1 - i;
+                        PackageModel p = claimedPackages.get(packageToUnclaimIndex);
+                        cassClient.deletePackageFromPostBox(postBox.getPostBoxID(), p.getPackageID());
+                        claimedPackages.remove(packageToUnclaimIndex);
+                    }
+                }
+                // Put the rest of the claimed packages in the post box
+                for (PackageModel p: claimedPackages) {
+                    p.setIsReadyToPickup(true);
+                    cassClient.upsertPackageInPostBox(postBox.getPostBoxID(), p);
+                    packagesInTrunk.remove(p);
+                    System.out.println("Putting package " + p.getPackageID() + " in post box " + postBox.getPostBoxID() + ".");
+                }
+
+            } else {
+                System.out.println("There is no free post box in " + district + ". Waiting for a bit.");
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
 }
