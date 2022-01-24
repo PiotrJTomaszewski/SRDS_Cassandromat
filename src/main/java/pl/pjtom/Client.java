@@ -2,6 +2,7 @@ package pl.pjtom;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.Map.Entry;
 
 import pl.pjtom.cassandra.CassandraBackendException;
@@ -10,9 +11,10 @@ import pl.pjtom.model.ClientModel;
 import pl.pjtom.model.PackageLogEvent;
 import pl.pjtom.model.PackageModel;
 
-public class Client {
+public class Client implements Runnable {
     private CassandraConnector cassClient;
     private ClientModel clientModel;
+    private Random rand;
 
     public Client(CassandraConnector cassClient, ClientModel clientModel) {
         this.cassClient = cassClient;
@@ -36,7 +38,7 @@ public class Client {
         for (Entry<String, ArrayList<PackageModel>> entry: packagesToPickupByPostBox.entrySet()) {
             System.out.println("Traveling to post box " + entry.getKey() + ".");
             try {
-                Thread.sleep(500);
+                Thread.sleep(500 + rand.nextInt(100));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -50,5 +52,16 @@ public class Client {
 
     public ClientModel getClientModel() {
         return clientModel;
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                pickupPackages();
+            } catch (CassandraBackendException e) {
+                System.err.println(e.getMessage());
+            }
+        }
     }
 }

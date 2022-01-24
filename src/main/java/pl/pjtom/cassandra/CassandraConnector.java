@@ -174,7 +174,7 @@ public class CassandraConnector {
         bs.bind(courierID, packageID);
 
         try {
-            ResultSet a = session.execute(bs);
+            session.execute(bs);
         } catch (Exception e) {
             throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
         }

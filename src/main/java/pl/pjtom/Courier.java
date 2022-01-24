@@ -11,7 +11,7 @@ import pl.pjtom.model.CourierModel;
 import pl.pjtom.model.PackageLogEvent;
 import pl.pjtom.model.PackageModel;
 
-public class Courier {
+public class Courier implements Runnable {
     private CassandraConnector cassClient;
     private ArrayList<PackageModel> claimedPackages = new ArrayList<>();
     private Random rand = new Random();
@@ -46,7 +46,7 @@ public class Courier {
                 } else {
                     System.out.println(" I'll stay for a bit longer");
                     try {
-                        Thread.sleep(500);
+                        Thread.sleep(500 + rand.nextInt(100));
                     } catch (InterruptedException e) {
                         System.out.println(e.getMessage());
                     }
@@ -127,7 +127,7 @@ public class Courier {
 
                 System.out.println("Traveling to the post box " + postBox.getPostBoxID() + ".");
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(600 + rand.nextInt(100));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -155,10 +155,22 @@ public class Courier {
             } else {
                 System.out.println("There is no free post box in " + district + ". Waiting for a bit.");
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(100 + rand.nextInt(20));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+            }
+        }
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                loadTheTrunk();
+                deliverPackages();
+            } catch (CassandraBackendException e) {
+                System.err.println(e.getMessage());
             }
         }
     }

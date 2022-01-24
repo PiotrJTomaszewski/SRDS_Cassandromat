@@ -15,8 +15,9 @@ public class DataCreator {
     static Random rand = new Random();
 
     public static void loadDataIntoCassandra(CassandraConnector cassClient) {
-        String[] districts = {"Grunwald", "Jeżyce", "Nowe Miasto", "Stare Miasto", "Wilda"};
-        
+        // String[] districts = {"Grunwald", "Jeżyce", "Nowe Miasto", "Stare Miasto", "Wilda"};
+        String[] districts = {"Grunwald", "Jeżyce", "Wilda"};
+
         try {
             // Create districts
             for (String district: districts) {
@@ -25,7 +26,7 @@ public class DataCreator {
 
             // Create post boxes
             for (String district: districts) {
-                int postBoxCount = rand.nextInt(3) + 2;
+                int postBoxCount = rand.nextInt(2) + 1;
                 for (int i=0; i<postBoxCount; i++) {
                     PostBoxModel postBox = new PostBoxModel();
                     postBox.generatePostboxID();
@@ -58,16 +59,17 @@ public class DataCreator {
         }
     }
 
-    public static void createPackages(CassandraConnector cassClient, int packageCount) throws CassandraBackendException {
+    public static void createSomePackages(CassandraConnector cassClient) throws CassandraBackendException {
         ArrayList<ClientModel> clients = cassClient.getClients();
-        for (int i=0; i<packageCount; i++) {
+        int packagesToGenerate = rand.nextInt(20) + 20;
+        for (int i=0; i<packagesToGenerate; i++) {
             ClientModel client = clients.get(rand.nextInt(clients.size()));
             PackageModel packageModel = new PackageModel();
             packageModel.generatePackageID();
             packageModel.setDistrictDest(client.getDistrict());
             packageModel.setClientID(client.getClientID());
             cassClient.upsertPackageInWarehouse(packageModel);
-            cassClient.upsertPackageLog(packageModel.getPackageID(), PackageLogEvent.CREATION, "Creator");
+            // cassClient.upsertPackageLog(packageModel.getPackageID(), PackageLogEvent.CREATION, "Creator");
         }
     }
 }
