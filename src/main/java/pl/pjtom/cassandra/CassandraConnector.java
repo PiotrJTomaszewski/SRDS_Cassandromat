@@ -10,6 +10,8 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Cluster.Builder;
 
+import pl.pjtom.model.ClientModel;
+import pl.pjtom.model.CourierModel;
 import pl.pjtom.model.PackageModel;
 import pl.pjtom.model.PostBoxModel;
 
@@ -50,7 +52,7 @@ public class CassandraConnector {
     private static PreparedStatement UPSERT_PACKAGE_IN_TRUNK;
     private static PreparedStatement DELETE_PACKAGES_IN_TRUNK_BY_ID;
 
-    private static PreparedStatement SELECT_POSTBOX;
+    private static PreparedStatement SELECT_POSTBOXES;
     private static PreparedStatement SELECT_POSTBOXES_IN_DISTRICT;
     private static PreparedStatement UPSERT_POSTBOX;
 
@@ -65,6 +67,12 @@ public class CassandraConnector {
     private static PreparedStatement SELECT_DISTRICTS;
     private static PreparedStatement UPSERT_DISTRICT;
 
+    private static PreparedStatement SELECT_CLIENTS;
+    private static PreparedStatement UPSERT_CLIENT;
+
+    private static PreparedStatement SELECT_COURIERS;
+    private static PreparedStatement UPSERT_COURIER;
+
     private void prepareStatements() throws CassandraBackendException {
         try {
             SELECT_PACKAGES_IN_WAREHOUSE = session.prepare("SELECT * FROM WarehouseContent;");
@@ -77,7 +85,7 @@ public class CassandraConnector {
             UPSERT_PACKAGE_IN_TRUNK = session.prepare("INSERT INTO CourierTrunkContent (courier_id, package_id, district_dest, client_id) VALUES (?, ?, ?, ?);");
             DELETE_PACKAGES_IN_TRUNK_BY_ID = session.prepare("DELETE FROM CourierTrunkContent WHERE courier_id = ? AND package_id = ?;");
 
-            SELECT_POSTBOX = session.prepare("SELECT * FROM PostBox;");
+            SELECT_POSTBOXES = session.prepare("SELECT * FROM PostBox;");
             SELECT_POSTBOXES_IN_DISTRICT = session.prepare("SELECT * FROM PostBox WHERE district = ?;");
             UPSERT_POSTBOX = session.prepare("INSERT INTO PostBox (postbox_id, district, capacity) VALUES (?, ?, ?);");
 
@@ -88,6 +96,12 @@ public class CassandraConnector {
 
             SELECT_DISTRICTS = session.prepare("SELECT * FROM District;");
             UPSERT_DISTRICT = session.prepare("INSERT INTO District (district) VALUES (?);");
+
+            SELECT_CLIENTS = session.prepare("SELECT * FROM Client;");
+            UPSERT_CLIENT = session.prepare("INSERT INTO Client (client_id, district) VALUES (?, ?);");
+
+            SELECT_COURIERS = session.prepare("SELECT * FROM Courier;");
+            UPSERT_COURIER = session.prepare("INSERT INTO Courier (courier_id, capacity) VALUES (?, ?);");
 
         } catch (Exception e) {
             throw new CassandraBackendException("Could not prepare statements. " + e.getMessage() + ".", e);
@@ -224,7 +238,7 @@ public class CassandraConnector {
     }
 
     public PostBoxModel getPostBox(String postBoxID) throws CassandraBackendException {
-        BoundStatement bs = new BoundStatement(SELECT_POSTBOX);
+        BoundStatement bs = new BoundStatement(SELECT_POSTBOXES);
         bs.bind(postBoxID);
         ResultSet rs = null;
         try {
@@ -350,7 +364,7 @@ public class CassandraConnector {
     }
 
     public void deletePackageFromPostBox(String postBoxID, String packageID) throws CassandraBackendException {
-        BoundStatement bs = new BoundStatement(DELETE_PACKAGES_IN_TRUNK_BY_ID);
+        BoundStatement bs = new BoundStatement(DELETE_PACKAGE_FROM_POSTBOX);
         bs.bind(postBoxID, packageID);
 
         try {
@@ -371,14 +385,71 @@ public class CassandraConnector {
         ArrayList<String> districts = new ArrayList<String>();
         for (Row row: rs) {
             districts.add(row.getString("district"));
-            return districts;
         }
-        return null;
+        return districts;
     }
 
     public void upsertDistrict(String district) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(UPSERT_DISTRICT);
         bs.bind(district);
+
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public ArrayList<CourierModel> getCouriers() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(SELECT_COURIERS);
+        ResultSet rs = null;
+        try {
+            rs = session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+        }
+        ArrayList<CourierModel> couriers = new ArrayList<>();
+        for (Row row: rs) {
+            CourierModel courier = new CourierModel();
+            courier.setCourierID(row.getString("courier_id"));
+            courier.setCapacity(row.getInt("capacity"));
+            couriers.add(courier);
+        }
+        return couriers;
+    }
+
+    public void upsertCourier(CourierModel courier) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(UPSERT_COURIER);
+        bs.bind(courier.getCourierID(), courier.getCapacity());
+
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public ArrayList<ClientModel> getClients() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(SELECT_CLIENTS);
+        ResultSet rs = null;
+        try {
+            rs = session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+        }
+        ArrayList<ClientModel> clients = new ArrayList<>();
+        for (Row row: rs) {
+            ClientModel client = new ClientModel();
+            client.setClientID(row.getString("client_id"));
+            client.setDistrict(row.getString("district"));
+            clients.add(client);
+        }
+        return clients;
+    }
+
+    public void upsertClient(ClientModel client) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(UPSERT_CLIENT);
+        bs.bind(client.getClientID(), client.getDistrict());
 
         try {
             session.execute(bs);

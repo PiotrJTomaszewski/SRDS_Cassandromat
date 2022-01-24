@@ -20,13 +20,11 @@ CREATE TABLE PostBox (
   PRIMARY KEY (district, postbox_id)
 );
 
--- CREATE TABLE Courier (
---   courier_id text,
---   capacity_S int,
---   capacity_M int,
---   capacity_L int,
---   PRIMARY KEY (courier_id)
--- );
+CREATE TABLE Courier (
+  courier_id text,
+  capacity int,
+  PRIMARY KEY (courier_id)
+);
 
 CREATE TABLE PostBoxContent (
   postbox_id text,

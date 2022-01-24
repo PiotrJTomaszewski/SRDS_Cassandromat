@@ -12,35 +12,13 @@ public class TemporaryMain {
     private Session session;
 
     public void run() throws CassandraBackendException {
-        CassandraConnector cassClient = new CassandraConnector();
-        cassClient.connect("127.0.0.1", 9042, "Cassandromat");
-        session = cassClient.getSession();
+        // CassandraConnector cassClient = new CassandraConnector();
+        // cassClient.connect("127.0.0.1", 9042, "Cassandromat");
+        // session = cassClient.getSession();
 
-        cassClient.upsertDistrict("Łazarz");
-        cassClient.upsertDistrict("Grunwald");
-        cassClient.upsertDistrict("Wilda");
+        // courier.loadTheTrunk();
+        // courier.deliverPackages();
 
-        Courier courier = new Courier(cassClient, true);
-        courier.generateCourierID();
-
-        Client client = new Client(cassClient);
-
-        PackageModel pack = new PackageModel();
-        pack.generatePackageID();
-        pack.setClientID(client.getClientModel().getClientID());
-        pack.setDistrictDest("Grunwald");
-
-        PostBoxModel postBox = new PostBoxModel();
-        postBox.generatePostboxID();
-        postBox.setCapacity(10);
-        postBox.setDistrict("Grunwald");
-        cassClient.upsertPostbox(postBox);
-
-        cassClient.upsertPackageInWarehouse(pack);
-
-        courier.loadTheTrunk();
-        courier.deliverPackages();
-
-        client.pickupPackages();
+        // client.pickupPackages();
     }
 }
