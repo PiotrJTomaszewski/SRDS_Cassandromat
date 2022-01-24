@@ -8,13 +8,22 @@ public class App {
         try {
             CassandraConnector cassClient = new CassandraConnector();
             cassClient.connect("127.0.0.1", 9042, "Cassandromat");
+            System.out.println("Removing old data. Please wait");
             if (args.length >= 1 && args[0].equals("create_data")) {
-                DataCreator.loadDataIntoCassandra(cassClient);
+                cassClient.truncatePostBox();
+                cassClient.truncateCourier();
+                cassClient.truncateClient();
+                cassClient.truncateDistrict();
+                DataCreator.loadDataIntoCassandra(cassClient, false);
             }
+            cassClient.truncatePostBoxContent();
+            cassClient.truncatePackageLog();
+            cassClient.truncateWarehouseContent();
+            cassClient.truncateCourierTrunkContent();
             StressTester stressTester = new StressTester(cassClient);
             stressTester.run();
         } catch (CassandraBackendException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
     }
 }

@@ -16,12 +16,11 @@ public class Courier implements Runnable {
     private ArrayList<PackageModel> claimedPackages = new ArrayList<>();
     private Random rand = new Random();
     private CourierModel courierModel;
+    private String destinationDistrict;
 
     public Courier(CassandraConnector cassClient, CourierModel courierModel) throws CassandraBackendException {
         this.cassClient = cassClient;
         this.courierModel = courierModel;
-        // Trunk content survives system restarts
-        claimedPackages = cassClient.getPackagesInTrunk(courierModel.getCourierID());
     }
 
     public void loadTheTrunk() throws CassandraBackendException {
@@ -30,7 +29,7 @@ public class Courier implements Runnable {
         while (stayAtWarehouse) {
             claimAndLoadPackages(packagesInTrunkCount);
             if (claimedPackages.size() + packagesInTrunkCount == courierModel.getCapacity()) {
-                System.out.println("Leaving the warehouse with a full trunk");
+                // System.out.println("Leaving the warehouse with a full trunk");
                 stayAtWarehouse = false;
             } else {
                 // Move successfully claimed packages to the trunk
@@ -41,10 +40,10 @@ public class Courier implements Runnable {
                 }
                 System.out.print("I have " + packagesInTrunkCount + "/" + courierModel.getCapacity() + " packages.");
                 if (packagesInTrunkCount > 0 && rand.nextInt(100) < 30) {
-                    System.out.println(" I'm leaving anyway");
+                    // System.out.println(" I'm leaving anyway");
                     stayAtWarehouse = false;
                 } else {
-                    System.out.println(" I'll stay for a bit longer");
+                    // System.out.println(" I'll stay for a bit longer");
                     try {
                         Thread.sleep(500 + rand.nextInt(100));
                     } catch (InterruptedException e) {
@@ -60,8 +59,8 @@ public class Courier implements Runnable {
         // Get the list of free packages in warehouse
         ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouse();
         ArrayList<String> districts = cassClient.getDistricts();
-        String destinationDistrict = districts.get(rand.nextInt(districts.size()));
-        System.out.println("Going to the " + destinationDistrict + " district.");
+        destinationDistrict = districts.get(rand.nextInt(districts.size()));
+        // System.out.println("Going to the " + destinationDistrict + " district.");
 
         // Claiming packages the courier wants to pick up
         for (PackageModel p: packages) {
@@ -85,11 +84,11 @@ public class Courier implements Runnable {
             PackageModel checkPackage = cassClient.getPackageInWarehouseByID(p.getPackageID());
             if (checkPackage != null && checkPackage.getCourierID().equals(courierModel.getCourierID())) {
                 p.setCourierID(courierModel.getCourierID());
-                System.out.println("I'm taking package " + p.getPackageID() + ".");
+                // System.out.println("I'm taking package " + p.getPackageID() + ".");
                 cassClient.upsertPackageInTrunk(p);
                 cassClient.deletePackageFromWarehouseByID(p.getPackageID());
             } else {
-                System.out.println("Someone else took the package " + p.getPackageID() + ".");
+                // System.out.println("Someone else took the package " + p.getPackageID() + ".");
             }
         }
     }
@@ -109,9 +108,8 @@ public class Courier implements Runnable {
         ArrayList<PackageModel> packagesInTrunk = cassClient.getPackagesInTrunk(courierModel.getCourierID());
         ArrayList<PackageModel> packagesToClaim = new ArrayList<>();
         packagesToClaim.addAll(packagesInTrunk);
-        String district = packagesInTrunk.get(0).getDistrictDest();
         while (packagesInTrunk.size() > 0) {
-            Optional<PostBoxModel> freePostBox = findFreePostBox(district);
+            Optional<PostBoxModel> freePostBox = findFreePostBox(destinationDistrict);
 
             if (freePostBox.isPresent()) {
                 // Packages for which a space in a post box was claimed
@@ -125,7 +123,7 @@ public class Courier implements Runnable {
                 }
                 packagesToClaim.removeAll(claimedPackages);
 
-                System.out.println("Traveling to the post box " + postBox.getPostBoxID() + ".");
+                // System.out.println("Traveling to the post box " + postBox.getPostBoxID() + ".");
                 try {
                     Thread.sleep(600 + rand.nextInt(100));
                 } catch (InterruptedException e) {
@@ -134,7 +132,7 @@ public class Courier implements Runnable {
 
                 int packagesToUnclaimCount = cassClient.countPackagesInPostBox(postBox.getPostBoxID()) - postBox.getCapacity();
                 if (packagesToUnclaimCount > 0) { // Post box is full
-                    System.out.println("Postbox " + postBox.getPostBoxID() + " is full. I have to unclaim" + packagesToUnclaimCount + " packages.");
+                    System.out.println("Postbox " + postBox.getPostBoxID() + " is full. I have to unclaim " + packagesToUnclaimCount + " packages.");
                     // Unclaim packages that wouldn't fit
                     for (int i=0; i<packagesToUnclaimCount && i<claimedPackages.size(); i++) {
                         int packageToUnclaimIndex = claimedPackages.size() - 1 - i;
@@ -153,7 +151,7 @@ public class Courier implements Runnable {
                 }
 
             } else {
-                System.out.println("There is no free post box in " + district + ". Waiting for a bit.");
+                // System.out.println("There is no free post box in " + district + ". Waiting for a bit.");
                 try {
                     Thread.sleep(100 + rand.nextInt(20));
                 } catch (InterruptedException e) {
@@ -169,7 +167,11 @@ public class Courier implements Runnable {
             try {
                 loadTheTrunk();
                 deliverPackages();
+                // Go back to the warehouse
+                Thread.sleep(500 + rand.nextInt(100));
             } catch (CassandraBackendException e) {
+                System.err.println(e.getMessage());
+            } catch (InterruptedException e) {
                 System.err.println(e.getMessage());
             }
         }

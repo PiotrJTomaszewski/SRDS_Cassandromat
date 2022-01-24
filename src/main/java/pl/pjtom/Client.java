@@ -14,7 +14,7 @@ import pl.pjtom.model.PackageModel;
 public class Client implements Runnable {
     private CassandraConnector cassClient;
     private ClientModel clientModel;
-    private Random rand;
+    private Random rand = new Random();
 
     public Client(CassandraConnector cassClient, ClientModel clientModel) {
         this.cassClient = cassClient;

@@ -74,6 +74,15 @@ public class CassandraConnector {
 
     private static PreparedStatement UPSERT_PACKAGE_INTO_LOG;
 
+    private static PreparedStatement TRUNCATE_POSTBOX;
+    private static PreparedStatement TRUNCATE_POSTBOX_CONTENT;
+    private static PreparedStatement TRUNCATE_COURIER;
+    private static PreparedStatement TRUNCATE_PACKAGE_LOG;
+    private static PreparedStatement TRUNCATE_WAREHOUSE_CONTENT;
+    private static PreparedStatement TRUNCATE_COURIER_TRUNK_CONTENT;
+    private static PreparedStatement TRUNCATE_CLIENT;
+    private static PreparedStatement TRUNCATE_DISTRICT;
+
     private void prepareStatements() throws CassandraBackendException {
         try {
             SELECT_PACKAGES_IN_WAREHOUSE = session.prepare("SELECT * FROM WarehouseContent;");
@@ -105,6 +114,15 @@ public class CassandraConnector {
             UPSERT_COURIER = session.prepare("INSERT INTO Courier (courier_id, capacity) VALUES (?, ?);");
 
             UPSERT_PACKAGE_INTO_LOG = session.prepare("INSERT INTO PackageLog (package_id, action_type, action_time, action_creator_id) VALUES (?, ?, ?, ?);");
+
+            TRUNCATE_POSTBOX = session.prepare("TRUNCATE PostBox;");
+            TRUNCATE_POSTBOX_CONTENT = session.prepare("TRUNCATE PostBoxContent;");
+            TRUNCATE_COURIER = session.prepare("TRUNCATE Courier;");
+            TRUNCATE_PACKAGE_LOG = session.prepare("TRUNCATE PackageLog;");
+            TRUNCATE_WAREHOUSE_CONTENT = session.prepare("TRUNCATE WarehouseContent;");
+            TRUNCATE_COURIER_TRUNK_CONTENT = session.prepare("TRUNCATE CourierTrunkContent;");
+            TRUNCATE_CLIENT = session.prepare("TRUNCATE Client;");
+            TRUNCATE_DISTRICT = session.prepare("TRUNCATE District;");
 
         } catch (Exception e) {
             throw new CassandraBackendException("Could not prepare statements. " + e.getMessage() + ".", e);
@@ -469,6 +487,78 @@ public class CassandraConnector {
             actionCreatorID
         );
 
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void truncatePostBox() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(TRUNCATE_POSTBOX);
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void truncatePostBoxContent() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(TRUNCATE_POSTBOX_CONTENT);
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void truncateCourier() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(TRUNCATE_COURIER);
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void truncatePackageLog() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(TRUNCATE_PACKAGE_LOG);
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void truncateWarehouseContent() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(TRUNCATE_WAREHOUSE_CONTENT);
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void truncateCourierTrunkContent() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(TRUNCATE_COURIER_TRUNK_CONTENT);
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void truncateClient() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(TRUNCATE_CLIENT);
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void truncateDistrict() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(TRUNCATE_DISTRICT);
         try {
             session.execute(bs);
         } catch (Exception e) {

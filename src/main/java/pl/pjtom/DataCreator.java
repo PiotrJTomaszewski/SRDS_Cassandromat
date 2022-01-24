@@ -14,7 +14,7 @@ import pl.pjtom.model.PostBoxModel;
 public class DataCreator {
     static Random rand = new Random();
 
-    public static void loadDataIntoCassandra(CassandraConnector cassClient) {
+    public static void loadDataIntoCassandra(CassandraConnector cassClient, boolean small_scale) {
         // String[] districts = {"Grunwald", "Jeżyce", "Nowe Miasto", "Stare Miasto", "Wilda"};
         String[] districts = {"Grunwald", "Jeżyce", "Wilda"};
 
@@ -37,7 +37,12 @@ public class DataCreator {
             }
 
             // Create couriers
-            int courierCount = 50;
+            int courierCount;
+            if (small_scale) {
+                courierCount = 1;
+            } else {
+                courierCount = 50;
+            }
             for (int i=0; i<courierCount; i++) {
                 CourierModel courier = new CourierModel();
                 courier.generateCourierID();
@@ -46,7 +51,12 @@ public class DataCreator {
             }
 
             // Create clients
-            int clientCount = 10;
+            int clientCount;
+            if (small_scale) {
+                clientCount = 1;
+            } else {
+                clientCount = 10;
+            }
             for (int i=0; i<clientCount; i++) {
                 ClientModel client = new ClientModel();
                 client.generateClientID();
@@ -55,7 +65,7 @@ public class DataCreator {
             }
             System.out.println("Data created");
         } catch (CassandraBackendException e) {
-            System.out.println(e);
+            System.err.println(e);
         }
     }
 

@@ -23,6 +23,7 @@ public class StressTester {
             clients.add(new Client(cassClient, clientModel));
         }
     }
+
     public void run() throws CassandraBackendException {
         DataCreator.createSomePackages(cassClient);
         ArrayList<Thread> courierThreads = new ArrayList<>();
@@ -44,7 +45,7 @@ public class StressTester {
         while (true) {
             DataCreator.createSomePackages(cassClient);
             try {
-                Thread.sleep(800);
+                Thread.sleep(600);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
