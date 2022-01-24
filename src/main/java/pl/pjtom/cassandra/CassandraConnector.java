@@ -137,7 +137,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getPackagesInWarehouse. " + e.getMessage() + ".", e);
         }
         for (Row row: rs) {
             PackageModel p = new PackageModel();
@@ -157,7 +157,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getPackageInWarehouseByID. " + e.getMessage() + ".", e);
         }
         Row row = rs.one();
         if (row != null) {
@@ -183,7 +183,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query upsertPackageInWarehouse. " + e.getMessage() + ".", e);
         }
     }
 
@@ -194,7 +194,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query updateCourierIDPackageInWarehouseByID. " + e.getMessage() + ".", e);
         }
     }
 
@@ -205,7 +205,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query deletePackageFromWarehouseByID. " + e.getMessage() + ".", e);
         }
     }
 
@@ -216,7 +216,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getPackagesInTrunk. " + e.getMessage() + ".", e);
         }
         ArrayList<PackageModel> packages = new ArrayList<PackageModel>();
         for (Row row: rs) {
@@ -242,7 +242,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query upsertPackageInTrunk. " + e.getMessage() + ".", e);
         }
     }
 
@@ -253,7 +253,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query deletePackageFromTrunkByID. " + e.getMessage() + ".", e);
         }
     }
 
@@ -264,7 +264,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getPostBox. " + e.getMessage() + ".", e);
         }
 
         Row row = rs.one();
@@ -285,7 +285,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getPostBoxesInDistrict. " + e.getMessage() + ".", e);
         }
 
         ArrayList<PostBoxModel> postboxes = new ArrayList<PostBoxModel>();
@@ -310,7 +310,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query upsertPostbox. " + e.getMessage() + ".", e);
         }
     }
 
@@ -321,7 +321,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getPackagesInPostBox. " + e.getMessage() + ".", e);
         }
         ArrayList<PackageModel> packages = new ArrayList<>();
         for (Row row: rs) {
@@ -341,7 +341,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getPackagesInPostBoxesByClientID. " + e.getMessage() + ".", e);
         }
         ArrayList<PackageModel> packages = new ArrayList<>();
         for (Row row: rs) {
@@ -362,7 +362,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query countPackagesInPostBox. " + e.getMessage() + ".", e);
         }
         return rs.all().size();
     }
@@ -379,7 +379,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query upsertPackageInPostBox. " + e.getMessage() + ".", e);
         }
     }
 
@@ -390,7 +390,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query deletePackageFromPostBox. " + e.getMessage() + ".", e);
         }
     }
 
@@ -400,7 +400,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getDistricts. " + e.getMessage() + ".", e);
         }
         ArrayList<String> districts = new ArrayList<String>();
         for (Row row: rs) {
@@ -416,7 +416,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query upsertDistrict. " + e.getMessage() + ".", e);
         }
     }
 
@@ -426,7 +426,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getCouriers. " + e.getMessage() + ".", e);
         }
         ArrayList<CourierModel> couriers = new ArrayList<>();
         for (Row row: rs) {
@@ -445,7 +445,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query upsertCourier. " + e.getMessage() + ".", e);
         }
     }
 
@@ -455,7 +455,7 @@ public class CassandraConnector {
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getClients. " + e.getMessage() + ".", e);
         }
         ArrayList<ClientModel> clients = new ArrayList<>();
         for (Row row: rs) {
@@ -474,7 +474,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query upsertClient. " + e.getMessage() + ".", e);
         }
     }
 
@@ -490,7 +490,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query upsertPackageLog. " + e.getMessage() + ".", e);
         }
     }
 
@@ -499,7 +499,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query truncatePostBox. " + e.getMessage() + ".", e);
         }
     }
 
@@ -508,7 +508,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query truncatePostBoxContent. " + e.getMessage() + ".", e);
         }
     }
 
@@ -517,7 +517,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query truncateCourier. " + e.getMessage() + ".", e);
         }
     }
 
@@ -526,7 +526,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query truncatePackageLog. " + e.getMessage() + ".", e);
         }
     }
 
@@ -535,7 +535,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query truncateWarehouseContent. " + e.getMessage() + ".", e);
         }
     }
 
@@ -544,7 +544,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query truncateCourierTrunkContent. " + e.getMessage() + ".", e);
         }
     }
 
@@ -553,7 +553,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query truncateClient. " + e.getMessage() + ".", e);
         }
     }
 
@@ -562,7 +562,7 @@ public class CassandraConnector {
         try {
             session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform user query truncateDistrict. " + e.getMessage() + ".", e);
         }
     }
 
