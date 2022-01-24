@@ -5,6 +5,7 @@ USE Cassandromat;
 
 DROP TABLE IF EXISTS PostBox;
 DROP TABLE IF EXISTS PostBoxContent;
+DROP INDEX IF EXISTS PostBoxContentClientIndex;
 DROP TABLE IF EXISTS Courier;
 DROP TABLE IF EXISTS PackageLog;
 DROP TABLE IF EXISTS WarehouseContent;
@@ -34,6 +35,8 @@ CREATE TABLE PostBoxContent (
   is_ready_to_pickup boolean,
   PRIMARY KEY (postbox_id, package_id)
 );
+
+CREATE INDEX PostBoxContentClientIndex ON PostBoxContent(client_id);
 
 CREATE TABLE PackageLog (
   package_id text,

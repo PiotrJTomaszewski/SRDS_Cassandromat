@@ -22,12 +22,12 @@ public class TemporaryMain {
 
         Courier courier = new Courier(cassClient, true);
         courier.generateCourierID();
-        ClientModel client = new ClientModel();
-        client.generateClientID();
-        
+
+        Client client = new Client(cassClient);
+
         PackageModel pack = new PackageModel();
         pack.generatePackageID();
-        pack.setClientID(client.getClientID());
+        pack.setClientID(client.getClientModel().getClientID());
         pack.setDistrictDest("Grunwald");
 
         PostBoxModel postBox = new PostBoxModel();
@@ -40,5 +40,7 @@ public class TemporaryMain {
 
         courier.loadTheTrunk();
         courier.deliverPackages();
+
+        client.pickupPackages();
     }
 }

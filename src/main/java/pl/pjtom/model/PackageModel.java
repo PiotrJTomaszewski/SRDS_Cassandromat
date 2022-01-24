@@ -9,6 +9,7 @@ public class PackageModel {
     private String clientID;
     private String courierID;
     private boolean isReadyToPickup;
+    private String postBoxID;
 
     public PackageModel() {
 
@@ -56,6 +57,14 @@ public class PackageModel {
 
     public void setIsReadyToPickup(boolean isReadyToPickup) {
         this.isReadyToPickup = isReadyToPickup;
+    }
+
+    public String getPostBoxID() {
+        return postBoxID;
+    }
+
+    public void setPostBoxID(String postBoxID) {
+        this.postBoxID = postBoxID;
     }
 
     @Override
