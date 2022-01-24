@@ -12,7 +12,7 @@ public class App {
             if (args.length >= 1 && args[0].equals("create_data")) {
                 DataCreator.loadDataIntoCassandra(cassClient);
             }
-            tmp.run();
+            tmp.run(cassClient);
         } catch (CassandraBackendException e) {
             e.printStackTrace();
         }

@@ -13,10 +13,9 @@ public class Client {
     private CassandraConnector cassClient;
     private ClientModel clientModel;
 
-    public Client(CassandraConnector cassClient) {
+    public Client(CassandraConnector cassClient, ClientModel clientModel) {
         this.cassClient = cassClient;
-        this.clientModel = new ClientModel();
-        this.clientModel.generateClientID(); // TODO: Temporary
+        this.clientModel = clientModel;
     }
 
     public void pickupPackages() throws CassandraBackendException {
