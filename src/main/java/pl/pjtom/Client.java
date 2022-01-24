@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import pl.pjtom.cassandra.CassandraBackendException;
 import pl.pjtom.cassandra.CassandraConnector;
 import pl.pjtom.model.ClientModel;
+import pl.pjtom.model.PackageLogEvent;
 import pl.pjtom.model.PackageModel;
 
 public class Client {
@@ -42,6 +43,7 @@ public class Client {
             System.out.println("Picking up " + entry.getValue().size() + " packages.");
             for (PackageModel p: entry.getValue()) {
                 cassClient.deletePackageFromPostBox(entry.getKey(), p.getPackageID());
+                cassClient.upsertPackageLog(p.getPackageID(), PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX, clientModel.getClientID());
             }
         }
     }

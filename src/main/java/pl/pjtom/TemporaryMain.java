@@ -26,9 +26,15 @@ public class TemporaryMain {
             clients.add(new Client(cassClient, clientModel));
         }
 
-        // courier.loadTheTrunk();
-        // courier.deliverPackages();
-
-        // client.pickupPackages();
+        DataCreator.createPackages(cassClient, 20);
+        for (Courier courier: couriers) {
+            courier.loadTheTrunk();
+        }
+        for (Courier courier: couriers) {
+            courier.deliverPackages();
+        }
+        for (Client client: clients) {
+            client.pickupPackages();
+        }
     }
 }

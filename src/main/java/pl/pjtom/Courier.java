@@ -8,6 +8,7 @@ import pl.pjtom.cassandra.CassandraBackendException;
 import pl.pjtom.cassandra.CassandraConnector;
 import pl.pjtom.model.PostBoxModel;
 import pl.pjtom.model.CourierModel;
+import pl.pjtom.model.PackageLogEvent;
 import pl.pjtom.model.PackageModel;
 
 public class Courier {
@@ -35,6 +36,7 @@ public class Courier {
                 // Move successfully claimed packages to the trunk
                 for (PackageModel p: claimedPackages) {
                     cassClient.upsertPackageInTrunk(p);
+                    cassClient.upsertPackageLog(p.getPackageID(), PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE, courierModel.getCourierID());
                     packagesInTrunkCount += 1;
                 }
                 System.out.print("I have " + packagesInTrunkCount + "/" + courierModel.getCapacity() + " packages.");
@@ -146,6 +148,7 @@ public class Courier {
                     p.setIsReadyToPickup(true);
                     cassClient.upsertPackageInPostBox(postBox.getPostBoxID(), p);
                     packagesInTrunk.remove(p);
+                    cassClient.upsertPackageLog(p.getPackageID(), PackageLogEvent.PUT_PACKAGE_IN_POSTBOX, courierModel.getCourierID());
                     System.out.println("Putting package " + p.getPackageID() + " in post box " + postBox.getPostBoxID() + ".");
                 }
 

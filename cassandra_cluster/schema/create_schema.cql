@@ -38,14 +38,11 @@ CREATE INDEX PostBoxContentClientIndex ON PostBoxContent(client_id);
 
 CREATE TABLE PackageLog (
   package_id text,
-  district_dest text,
-  client_id text,
-  is_in_warehouse boolean,
-  is_delivered boolean,
-  is_picked_up boolean,
-  PRIMARY KEY (package_id)
+  action_type int,
+  action_time timestamp,
+  action_creator_id text,
+  PRIMARY KEY (action_time, package_id, action_creator_id)
 );
--- Split by month or sth
 
 CREATE TABLE WarehouseContent (
   package_id text,

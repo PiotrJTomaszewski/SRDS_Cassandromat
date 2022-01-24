@@ -7,6 +7,7 @@ import pl.pjtom.cassandra.CassandraBackendException;
 import pl.pjtom.cassandra.CassandraConnector;
 import pl.pjtom.model.ClientModel;
 import pl.pjtom.model.CourierModel;
+import pl.pjtom.model.PackageLogEvent;
 import pl.pjtom.model.PackageModel;
 import pl.pjtom.model.PostBoxModel;
 
@@ -66,6 +67,7 @@ public class DataCreator {
             packageModel.setDistrictDest(client.getDistrict());
             packageModel.setClientID(client.getClientID());
             cassClient.upsertPackageInWarehouse(packageModel);
+            cassClient.upsertPackageLog(packageModel.getPackageID(), PackageLogEvent.CREATION, "Creator");
         }
     }
 }

@@ -1,5 +1,6 @@
 package pl.pjtom.cassandra;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.EnumMap;
 
@@ -12,6 +13,7 @@ import com.datastax.driver.core.Cluster.Builder;
 
 import pl.pjtom.model.ClientModel;
 import pl.pjtom.model.CourierModel;
+import pl.pjtom.model.PackageLogEvent;
 import pl.pjtom.model.PackageModel;
 import pl.pjtom.model.PostBoxModel;
 
@@ -61,9 +63,6 @@ public class CassandraConnector {
     private static PreparedStatement UPSERT_PACKAGE_IN_POSTBOX;
     private static PreparedStatement DELETE_PACKAGE_FROM_POSTBOX;
 
-    private static PreparedStatement SELECT_PACKAGE_LOG;
-    private static PreparedStatement UPSERT_PACKAGE_INTO_LOG;
-
     private static PreparedStatement SELECT_DISTRICTS;
     private static PreparedStatement UPSERT_DISTRICT;
 
@@ -72,6 +71,8 @@ public class CassandraConnector {
 
     private static PreparedStatement SELECT_COURIERS;
     private static PreparedStatement UPSERT_COURIER;
+
+    private static PreparedStatement UPSERT_PACKAGE_INTO_LOG;
 
     private void prepareStatements() throws CassandraBackendException {
         try {
@@ -102,6 +103,8 @@ public class CassandraConnector {
 
             SELECT_COURIERS = session.prepare("SELECT * FROM Courier;");
             UPSERT_COURIER = session.prepare("INSERT INTO Courier (courier_id, capacity) VALUES (?, ?);");
+
+            UPSERT_PACKAGE_INTO_LOG = session.prepare("INSERT INTO PackageLog (package_id, action_type, action_time, action_creator_id) VALUES (?, ?, ?, ?);");
 
         } catch (Exception e) {
             throw new CassandraBackendException("Could not prepare statements. " + e.getMessage() + ".", e);
@@ -172,7 +175,6 @@ public class CassandraConnector {
 
         try {
             ResultSet a = session.execute(bs);
-            System.out.println(a);
         } catch (Exception e) {
             throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
         }
@@ -450,6 +452,22 @@ public class CassandraConnector {
     public void upsertClient(ClientModel client) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(UPSERT_CLIENT);
         bs.bind(client.getClientID(), client.getDistrict());
+
+        try {
+            session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform user query. " + e.getMessage() + ".", e);
+        }
+    }
+
+    public void upsertPackageLog(String packageID, PackageLogEvent actionType, String actionCreatorID) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(UPSERT_PACKAGE_INTO_LOG);
+        bs.bind(
+            packageID,
+            actionType.getValue(),
+            new Date(System.currentTimeMillis()),
+            actionCreatorID
+        );
 
         try {
             session.execute(bs);
