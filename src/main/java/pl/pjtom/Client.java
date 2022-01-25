@@ -10,6 +10,7 @@ import pl.pjtom.cassandra.CassandraConnector;
 import pl.pjtom.model.ClientModel;
 import pl.pjtom.model.PackageLogEvent;
 import pl.pjtom.model.PackageModel;
+import pl.pjtom.model.PackageLogEntryModel;
 
 public class Client implements Runnable {
     private CassandraConnector cassClient;
@@ -36,16 +37,16 @@ public class Client implements Runnable {
         }
 
         for (Entry<String, ArrayList<PackageModel>> entry: packagesToPickupByPostBox.entrySet()) {
-            System.out.println("Traveling to post box " + entry.getKey() + ".");
+            // System.out.println("Traveling to post box " + entry.getKey() + ".");
             try {
                 Thread.sleep(100 + rand.nextInt(10));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            System.out.println("Picking up " + entry.getValue().size() + " packages.");
+            // System.out.println("Picking up " + entry.getValue().size() + " packages.");
             for (PackageModel p: entry.getValue()) {
                 cassClient.deletePackageFromPostBox(entry.getKey(), p.getPackageID());
-                cassClient.upsertPackageLog(p.getPackageID(), PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX, clientModel.getClientID());
+                cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX, clientModel.getClientID(), p.getPostBoxID()));
             }
         }
     }

@@ -1,8 +1,7 @@
 package pl.pjtom.cassandra;
 
-import java.sql.Date;
+import java.util.Date;
 import java.util.ArrayList;
-import java.util.EnumMap;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
@@ -13,6 +12,7 @@ import com.datastax.driver.core.Cluster.Builder;
 
 import pl.pjtom.model.ClientModel;
 import pl.pjtom.model.CourierModel;
+import pl.pjtom.model.PackageLogEntryModel;
 import pl.pjtom.model.PackageLogEvent;
 import pl.pjtom.model.PackageModel;
 import pl.pjtom.model.PostBoxModel;
@@ -72,6 +72,7 @@ public class CassandraConnector {
     private static PreparedStatement SELECT_COURIERS;
     private static PreparedStatement UPSERT_COURIER;
 
+    private static PreparedStatement SELECT_PACKAGE_LOG;
     private static PreparedStatement UPSERT_PACKAGE_INTO_LOG;
 
     private static PreparedStatement TRUNCATE_POSTBOX;
@@ -113,7 +114,8 @@ public class CassandraConnector {
             SELECT_COURIERS = session.prepare("SELECT * FROM Courier;");
             UPSERT_COURIER = session.prepare("INSERT INTO Courier (courier_id, capacity) VALUES (?, ?);");
 
-            UPSERT_PACKAGE_INTO_LOG = session.prepare("INSERT INTO PackageLog (package_id, action_type, action_time, action_creator_id) VALUES (?, ?, ?, ?);");
+            SELECT_PACKAGE_LOG = session.prepare("SELECT * FROM PackageLog;");
+            UPSERT_PACKAGE_INTO_LOG = session.prepare("INSERT INTO PackageLog (package_id, action_type, action_time, actor_id, postbox_id) VALUES (?, ?, ?, ?, ?);");
 
             TRUNCATE_POSTBOX = session.prepare("TRUNCATE PostBox;");
             TRUNCATE_POSTBOX_CONTENT = session.prepare("TRUNCATE PostBoxContent;");
@@ -478,13 +480,35 @@ public class CassandraConnector {
         }
     }
 
-    public void upsertPackageLog(String packageID, PackageLogEvent actionType, String actionCreatorID) throws CassandraBackendException {
+    public ArrayList<PackageLogEntryModel> getPackageLog() throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(SELECT_PACKAGE_LOG);
+        ResultSet rs = null;
+        try {
+            rs = session.execute(bs);
+        } catch (Exception e) {
+            throw new CassandraBackendException("Could not perform a query getPackageLog. " + e.getMessage() + ".", e);
+        }
+        ArrayList<PackageLogEntryModel> packageLog = new ArrayList<>();
+        for (Row row: rs) {
+            PackageLogEntryModel packageLogEntry = new PackageLogEntryModel();
+            packageLogEntry.setPackageID(row.getString("package_id"));
+            packageLogEntry.setActionType(PackageLogEvent.fromInt(row.getInt("action_type")));
+            packageLogEntry.setActionTime(row.getTimestamp("action_time"));
+            packageLogEntry.setActorID(row.getString("actor_id"));
+            packageLogEntry.setPostBoxID(row.getString("postbox_id"));
+            packageLog.add(packageLogEntry);
+        }
+        return packageLog;
+    }
+
+    public void upsertPackageLog(PackageLogEntryModel packageLogEntry) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(UPSERT_PACKAGE_INTO_LOG);
         bs.bind(
-            packageID,
-            actionType.getValue(),
-            new Date(System.currentTimeMillis()),
-            actionCreatorID
+            packageLogEntry.getPackageID(),
+            packageLogEntry.getActionType().getValue(),
+            packageLogEntry.getActionTime(),
+            packageLogEntry.getActorID(),
+            packageLogEntry.getPostBoxID()
         );
 
         try {

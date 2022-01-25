@@ -9,6 +9,7 @@ import pl.pjtom.cassandra.CassandraConnector;
 import pl.pjtom.model.PostBoxModel;
 import pl.pjtom.model.CourierModel;
 import pl.pjtom.model.PackageLogEvent;
+import pl.pjtom.model.PackageLogEntryModel;
 import pl.pjtom.model.PackageModel;
 
 public class Courier implements Runnable {
@@ -30,7 +31,7 @@ public class Courier implements Runnable {
             ArrayList<String> districts = cassClient.getDistricts();
             String destinationDistrict = districts.get(rand.nextInt(districts.size()));
             ArrayList<PackageModel> claimedPackages = new ArrayList<>();
-            // System.out.println("Going to the " + destinationDistrict + " district.");
+            // System.out.println(courierModel.getCourierID() + ": Going to the " + destinationDistrict + " district.");
 
             // Claiming packages the courier wants to pick up
             for (PackageModel p: packages) {
@@ -56,10 +57,10 @@ public class Courier implements Runnable {
                 PackageModel checkPackage = cassClient.getPackageInWarehouseByID(p.getPackageID());
                 if (checkPackage != null && checkPackage.getCourierID().equals(courierModel.getCourierID())) {
                     p.setCourierID(courierModel.getCourierID());
-                    // System.out.println("I'm taking package " + p.getPackageID() + ".");
+                    System.out.println(courierModel.getCourierID() + ": I'm taking package " + p.getPackageID() + ".");
                     cassClient.upsertPackageInTrunk(p);
                     cassClient.deletePackageFromWarehouseByID(p.getPackageID());
-                    cassClient.upsertPackageLog(p.getPackageID(), PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE, courierModel.getCourierID());
+                    cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE, courierModel.getCourierID(), null));
                     packagesInTrunkCount += 1;
                 } else {
                     // System.out.println("Someone else took the package " + p.getPackageID() + ".");
@@ -112,7 +113,7 @@ public class Courier implements Runnable {
                     p.setIsReadyToPickup(false);
                     cassClient.upsertPackageInPostBox(postBox.getPostBoxID(), p);
                     claimedPackages.add(p);
-                    System.out.println("Claimed space in " + postBox.getPostBoxID() + " for " + p.getPackageID() + ".");
+                    System.out.println(courierModel.getCourierID() + ": Claimed space in " + postBox.getPostBoxID() + " for " + p.getPackageID() + ".");
                     freePostBoxCapacityLeft -= 1;
                     if (freePostBoxCapacityLeft == 0) {
                         break;
@@ -129,7 +130,7 @@ public class Courier implements Runnable {
 
                 int packagesToUnclaimCount = cassClient.countPackagesInPostBox(postBox.getPostBoxID()) - postBox.getCapacity();
                 if (packagesToUnclaimCount > 0) { // Post box is full
-                    System.out.println("Postbox " + postBox.getPostBoxID() + " is full. I have to unclaim " + packagesToUnclaimCount + " packages.");
+                    // System.out.println(courierModel.getCourierID() + ": Postbox " + postBox.getPostBoxID() + " is full. I have to unclaim " + packagesToUnclaimCount + " packages.");
                     // Unclaim packages that wouldn't fit
                     for (int i=0; i<packagesToUnclaimCount && i<claimedPackages.size(); i++) {
                         int packageToUnclaimIndex = claimedPackages.size() - 1 - i;
@@ -143,8 +144,9 @@ public class Courier implements Runnable {
                     p.setIsReadyToPickup(true);
                     cassClient.upsertPackageInPostBox(postBox.getPostBoxID(), p);
                     packagesInTrunk.remove(p);
-                    cassClient.upsertPackageLog(p.getPackageID(), PackageLogEvent.PUT_PACKAGE_IN_POSTBOX, courierModel.getCourierID());
-                    System.out.println("Putting package " + p.getPackageID() + " in post box " + postBox.getPostBoxID() + ".");
+                    cassClient.deletePackageFromTrunkByID(courierModel.getCourierID(), p.getPackageID());
+                    cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PUT_PACKAGE_IN_POSTBOX, courierModel.getCourierID(), postBox.getPostBoxID()));
+                    System.out.println(courierModel.getCourierID() + ": Putting package " + p.getPackageID() + " in post box " + postBox.getPostBoxID() + ".");
                 }
 
             } else {

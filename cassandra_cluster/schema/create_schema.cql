@@ -40,8 +40,9 @@ CREATE TABLE PackageLog (
   package_id text,
   action_type int,
   action_time timestamp,
-  action_creator_id text,
-  PRIMARY KEY (action_time, package_id, action_creator_id)
+  actor_id text,
+  postbox_id text,
+  PRIMARY KEY (action_time, package_id, actor_id)
 );
 
 CREATE TABLE WarehouseContent (
