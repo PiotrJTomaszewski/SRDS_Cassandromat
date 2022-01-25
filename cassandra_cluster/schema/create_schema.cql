@@ -1,5 +1,5 @@
 CREATE KEYSPACE IF NOT EXISTS Cassandromat
-  WITH REPLICATION = { 'class': 'SimpleStrategy', 'replication_factor': 3 };
+  WITH REPLICATION = { 'class': 'SimpleStrategy', 'replication_factor': 1 };
 
 USE Cassandromat;
 
@@ -57,7 +57,6 @@ CREATE TABLE CourierTrunkContent (
   package_id text,
   district_dest text,
   client_id text,
-  container_size int,
   PRIMARY KEY (courier_id, package_id)
 );
 

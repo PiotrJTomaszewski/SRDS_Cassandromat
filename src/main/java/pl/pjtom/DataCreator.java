@@ -12,7 +12,8 @@ import pl.pjtom.model.PackageModel;
 import pl.pjtom.model.PostBoxModel;
 
 public class DataCreator {
-    static Random rand = new Random();
+    static private Random rand = new Random();
+    static private ArrayList<ClientModel> clients;
 
     public static void loadDataIntoCassandra(CassandraConnector cassClient, boolean small_scale) {
         // String[] districts = {"Grunwald", "Jeżyce", "Nowe Miasto", "Stare Miasto", "Wilda"};
@@ -26,12 +27,12 @@ public class DataCreator {
 
             // Create post boxes
             for (String district: districts) {
-                int postBoxCount = rand.nextInt(2) + 1;
+                int postBoxCount = 2;
                 for (int i=0; i<postBoxCount; i++) {
                     PostBoxModel postBox = new PostBoxModel();
                     postBox.generatePostboxID();
                     postBox.setDistrict(district);
-                    postBox.setCapacity(rand.nextInt(8) + 2);
+                    postBox.setCapacity(rand.nextInt(3) + 2);
                     cassClient.upsertPostbox(postBox);
                 }
             }
@@ -41,12 +42,12 @@ public class DataCreator {
             if (small_scale) {
                 courierCount = 1;
             } else {
-                courierCount = 50;
+                courierCount = 25;
             }
             for (int i=0; i<courierCount; i++) {
                 CourierModel courier = new CourierModel();
                 courier.generateCourierID();
-                courier.setCapacity(rand.nextInt(5) + 2);
+                courier.setCapacity(rand.nextInt(2) + 2);
                 cassClient.upsertCourier(courier);
             }
 
@@ -55,7 +56,7 @@ public class DataCreator {
             if (small_scale) {
                 clientCount = 1;
             } else {
-                clientCount = 10;
+                clientCount = 5;
             }
             for (int i=0; i<clientCount; i++) {
                 ClientModel client = new ClientModel();
@@ -70,8 +71,10 @@ public class DataCreator {
     }
 
     public static void createSomePackages(CassandraConnector cassClient) throws CassandraBackendException {
-        ArrayList<ClientModel> clients = cassClient.getClients();
-        int packagesToGenerate = rand.nextInt(20) + 20;
+        if (clients == null) {
+            clients = cassClient.getClients();
+        }
+        int packagesToGenerate = rand.nextInt(5) + 5;
         for (int i=0; i<packagesToGenerate; i++) {
             ClientModel client = clients.get(rand.nextInt(clients.size()));
             PackageModel packageModel = new PackageModel();

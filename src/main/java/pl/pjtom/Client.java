@@ -38,7 +38,7 @@ public class Client implements Runnable {
         for (Entry<String, ArrayList<PackageModel>> entry: packagesToPickupByPostBox.entrySet()) {
             System.out.println("Traveling to post box " + entry.getKey() + ".");
             try {
-                Thread.sleep(500 + rand.nextInt(100));
+                Thread.sleep(100 + rand.nextInt(10));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -59,7 +59,10 @@ public class Client implements Runnable {
         while (true) {
             try {
                 pickupPackages();
+                Thread.sleep(100);
             } catch (CassandraBackendException e) {
+                System.err.println(e.getMessage());
+            } catch (InterruptedException e) {
                 System.err.println(e.getMessage());
             }
         }

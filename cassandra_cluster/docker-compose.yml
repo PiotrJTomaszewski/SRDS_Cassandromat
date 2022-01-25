@@ -19,8 +19,8 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: '2'
-          memory: 4G
+          cpus: '1'
+          memory: 3G
     networks:
       - cassandra
     ports:

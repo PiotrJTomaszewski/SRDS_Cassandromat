@@ -13,10 +13,8 @@ import pl.pjtom.model.PackageModel;
 
 public class Courier implements Runnable {
     private CassandraConnector cassClient;
-    private ArrayList<PackageModel> claimedPackages = new ArrayList<>();
     private Random rand = new Random();
     private CourierModel courierModel;
-    private String destinationDistrict;
 
     public Courier(CassandraConnector cassClient, CourierModel courierModel) throws CassandraBackendException {
         this.cassClient = cassClient;
@@ -27,18 +25,52 @@ public class Courier implements Runnable {
         boolean stayAtWarehouse = true;
         int packagesInTrunkCount = 0;
         while (stayAtWarehouse) {
-            claimAndLoadPackages(packagesInTrunkCount);
-            if (claimedPackages.size() + packagesInTrunkCount == courierModel.getCapacity()) {
+            // Get the list of free packages in warehouse
+            ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouse();
+            ArrayList<String> districts = cassClient.getDistricts();
+            String destinationDistrict = districts.get(rand.nextInt(districts.size()));
+            ArrayList<PackageModel> claimedPackages = new ArrayList<>();
+            // System.out.println("Going to the " + destinationDistrict + " district.");
+
+            // Claiming packages the courier wants to pick up
+            for (PackageModel p: packages) {
+                if (p.getCourierID() == null && p.getDistrictDest().equals(destinationDistrict)) {
+                    if (packagesInTrunkCount + claimedPackages.size() < courierModel.getCapacity()) {
+                        cassClient.updateCourierIDPackageInWarehouseByID(p.getPackageID(), courierModel.getCourierID());
+                        claimedPackages.add(p);
+                    } else {
+                        break;
+                    }
+                }
+            }
+
+            // Wait to see if the packages were successfully claimed
+            try {
+                Thread.sleep(300 + rand.nextInt(100));
+            } catch (InterruptedException e) {
+                e.getMessage();
+            }
+
+            // Move successfully claimed packages to the trunk
+            for (PackageModel p: claimedPackages) {
+                PackageModel checkPackage = cassClient.getPackageInWarehouseByID(p.getPackageID());
+                if (checkPackage != null && checkPackage.getCourierID().equals(courierModel.getCourierID())) {
+                    p.setCourierID(courierModel.getCourierID());
+                    // System.out.println("I'm taking package " + p.getPackageID() + ".");
+                    cassClient.upsertPackageInTrunk(p);
+                    cassClient.deletePackageFromWarehouseByID(p.getPackageID());
+                    cassClient.upsertPackageLog(p.getPackageID(), PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE, courierModel.getCourierID());
+                    packagesInTrunkCount += 1;
+                } else {
+                    // System.out.println("Someone else took the package " + p.getPackageID() + ".");
+                }
+            }
+
+            System.out.print("I have " + packagesInTrunkCount + "/" + courierModel.getCapacity() + " packages.");
+            if (packagesInTrunkCount == courierModel.getCapacity()) {
                 // System.out.println("Leaving the warehouse with a full trunk");
                 stayAtWarehouse = false;
             } else {
-                // Move successfully claimed packages to the trunk
-                for (PackageModel p: claimedPackages) {
-                    cassClient.upsertPackageInTrunk(p);
-                    cassClient.upsertPackageLog(p.getPackageID(), PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE, courierModel.getCourierID());
-                    packagesInTrunkCount += 1;
-                }
-                System.out.print("I have " + packagesInTrunkCount + "/" + courierModel.getCapacity() + " packages.");
                 if (packagesInTrunkCount > 0 && rand.nextInt(100) < 30) {
                     // System.out.println(" I'm leaving anyway");
                     stayAtWarehouse = false;
@@ -50,45 +82,6 @@ public class Courier implements Runnable {
                         System.out.println(e.getMessage());
                     }
                 }
-                claimedPackages.clear();
-            }
-        }
-    }
-
-    private void claimAndLoadPackages(int packagesInTrunkCount) throws CassandraBackendException {
-        // Get the list of free packages in warehouse
-        ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouse();
-        ArrayList<String> districts = cassClient.getDistricts();
-        destinationDistrict = districts.get(rand.nextInt(districts.size()));
-        // System.out.println("Going to the " + destinationDistrict + " district.");
-
-        // Claiming packages the courier wants to pick up
-        for (PackageModel p: packages) {
-            if (p.getCourierID() == null && p.getDistrictDest().equals(destinationDistrict)) {
-                if (packagesInTrunkCount + claimedPackages.size() < courierModel.getCapacity()) {
-                    cassClient.updateCourierIDPackageInWarehouseByID(p.getPackageID(), courierModel.getCourierID());
-                    claimedPackages.add(p);
-                } else {
-                    break;
-                }
-            }
-        }
-
-        try {
-            Thread.sleep(300);
-        } catch (InterruptedException e) {
-            e.getMessage();
-        }
-
-        for (PackageModel p: claimedPackages) {
-            PackageModel checkPackage = cassClient.getPackageInWarehouseByID(p.getPackageID());
-            if (checkPackage != null && checkPackage.getCourierID().equals(courierModel.getCourierID())) {
-                p.setCourierID(courierModel.getCourierID());
-                // System.out.println("I'm taking package " + p.getPackageID() + ".");
-                cassClient.upsertPackageInTrunk(p);
-                cassClient.deletePackageFromWarehouseByID(p.getPackageID());
-            } else {
-                // System.out.println("Someone else took the package " + p.getPackageID() + ".");
             }
         }
     }
@@ -108,8 +101,9 @@ public class Courier implements Runnable {
         ArrayList<PackageModel> packagesInTrunk = cassClient.getPackagesInTrunk(courierModel.getCourierID());
         ArrayList<PackageModel> packagesToClaim = new ArrayList<>();
         packagesToClaim.addAll(packagesInTrunk);
+        String district = packagesInTrunk.get(0).getDistrictDest();
         while (packagesInTrunk.size() > 0) {
-            Optional<PostBoxModel> freePostBox = findFreePostBox(destinationDistrict);
+            Optional<PostBoxModel> freePostBox = findFreePostBox(district);
 
             if (freePostBox.isPresent()) {
                 // Packages for which a space in a post box was claimed
@@ -125,7 +119,7 @@ public class Courier implements Runnable {
 
                 // System.out.println("Traveling to the post box " + postBox.getPostBoxID() + ".");
                 try {
-                    Thread.sleep(600 + rand.nextInt(100));
+                    Thread.sleep(300 + rand.nextInt(100));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -168,12 +162,13 @@ public class Courier implements Runnable {
                 loadTheTrunk();
                 deliverPackages();
                 // Go back to the warehouse
-                Thread.sleep(500 + rand.nextInt(100));
+                // Thread.sleep(500 + rand.nextInt(100));
             } catch (CassandraBackendException e) {
                 System.err.println(e.getMessage());
-            } catch (InterruptedException e) {
-                System.err.println(e.getMessage());
             }
+            // catch (InterruptedException e) {
+            //     System.err.println(e.getMessage());
+            // }
         }
     }
 
