@@ -49,7 +49,7 @@ public class Courier implements Runnable {
             try {
                 Thread.sleep(300 + rand.nextInt(100));
             } catch (InterruptedException e) {
-                e.getMessage();
+                System.err.println(e.getMessage());
             }
 
             // Move successfully claimed packages to the trunk
@@ -80,7 +80,7 @@ public class Courier implements Runnable {
                     try {
                         Thread.sleep(500 + rand.nextInt(100));
                     } catch (InterruptedException e) {
-                        System.out.println(e.getMessage());
+                        System.err.println(e.getMessage());
                     }
                 }
             }
@@ -125,7 +125,7 @@ public class Courier implements Runnable {
                 try {
                     Thread.sleep(300 + rand.nextInt(100));
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    System.err.println(e.getMessage());
                 }
 
                 int packagesToUnclaimCount = cassClient.countPackagesInPostBox(postBox.getPostBoxID()) - postBox.getCapacity();
@@ -154,7 +154,7 @@ public class Courier implements Runnable {
                 try {
                     Thread.sleep(100 + rand.nextInt(20));
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    System.err.println(e.getMessage());
                 }
             }
         }

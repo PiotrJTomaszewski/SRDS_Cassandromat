@@ -7,7 +7,6 @@ import pl.pjtom.cassandra.CassandraBackendException;
 import pl.pjtom.cassandra.CassandraConnector;
 import pl.pjtom.model.ClientModel;
 import pl.pjtom.model.CourierModel;
-import pl.pjtom.model.PackageLogEvent;
 import pl.pjtom.model.PackageModel;
 import pl.pjtom.model.PostBoxModel;
 
@@ -42,7 +41,7 @@ public class DataCreator {
             if (small_scale) {
                 courierCount = 1;
             } else {
-                courierCount = 25;
+                courierCount = 70;
             }
             for (int i=0; i<courierCount; i++) {
                 CourierModel courier = new CourierModel();
@@ -56,7 +55,7 @@ public class DataCreator {
             if (small_scale) {
                 clientCount = 1;
             } else {
-                clientCount = 5;
+                clientCount = 10;
             }
             for (int i=0; i<clientCount; i++) {
                 ClientModel client = new ClientModel();
@@ -74,7 +73,7 @@ public class DataCreator {
         if (clients == null) {
             clients = cassClient.getClients();
         }
-        int packagesToGenerate = rand.nextInt(5) + 5;
+        int packagesToGenerate = rand.nextInt(20) + 20;
         for (int i=0; i<packagesToGenerate; i++) {
             ClientModel client = clients.get(rand.nextInt(clients.size()));
             PackageModel packageModel = new PackageModel();

@@ -41,7 +41,7 @@ public class Client implements Runnable {
             try {
                 Thread.sleep(100 + rand.nextInt(10));
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                System.err.println(e.getMessage());
             }
             // System.out.println("Picking up " + entry.getValue().size() + " packages.");
             for (PackageModel p: entry.getValue()) {

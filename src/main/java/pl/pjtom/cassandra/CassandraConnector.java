@@ -1,6 +1,5 @@
 package pl.pjtom.cassandra;
 
-import java.util.Date;
 import java.util.ArrayList;
 
 import com.datastax.driver.core.BoundStatement;

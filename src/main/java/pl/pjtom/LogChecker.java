@@ -3,7 +3,6 @@ package pl.pjtom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 import pl.pjtom.cassandra.CassandraBackendException;
@@ -63,6 +62,7 @@ public class LogChecker {
 
     private boolean checkCouriersCapacity() {
         boolean everythingOK = true;
+        int entriesChecked = 0;
         for (CourierModel courier: couriers) {
             int capacityLeft = courier.getCapacity();
             for (PackageLogEntryModel entry: entriesByActor.get(courier.getCourierID())) {
@@ -79,16 +79,18 @@ public class LogChecker {
                     everythingOK = false;
                     System.out.println("Courier " + courier.getCourierID() + " taken out more pacakes than he put in.");
                 }
+                entriesChecked += 1;
             }
         }
         if (everythingOK) {
-            System.out.println("Couriers capacity OK");
+            System.out.println("Couriers capacity OK, " + entriesChecked + " checked.");
         }
         return everythingOK;
     }
 
     private boolean checkPackageDeliveryHistory() {
         boolean everythingOK = true;
+        int entriesChecked = 0;
         for (Map.Entry<String, ArrayList<PackageLogEntryModel>> mapEntry: entriesByPackage.entrySet()) {
             int pickedFromWarehouseCount = 0;
             int putInPostBoxCount = 0;
@@ -108,15 +110,17 @@ public class LogChecker {
                 everythingOK = false;
                 System.out.println("Package " + mapEntry.getKey() + " was put in post box more than once.");
             }
+            entriesChecked += 1;
         }
         if (everythingOK) {
-            System.out.println("Package delivery history OK");
+            System.out.println("Package delivery history OK, " + entriesChecked + " entries checked.");
         }
         return everythingOK;
     }
 
     private boolean checkPostBoxCapacityHistory() {
         boolean everythingOK = true;
+        int entriesChecked = 0;
         for (PostBoxModel postBox: postBoxes) {
             int capacityLeft = postBox.getCapacity();
             for (PackageLogEntryModel entry: entriesByPostBox.get(postBox.getPostBoxID())) {
@@ -133,10 +137,11 @@ public class LogChecker {
                     everythingOK = false;
                     System.out.println("Post box " + postBox.getPostBoxID() + " has less than 0 pacakges.");
                 }
+                entriesChecked += 1;
             }
         }
         if (everythingOK) {
-            System.out.println("Post box capacity OK");
+            System.out.println("Post box capacity OK, " + entriesChecked + " entries checked.");
         }
         return everythingOK;
     }
