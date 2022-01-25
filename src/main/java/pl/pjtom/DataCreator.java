@@ -41,7 +41,7 @@ public class DataCreator {
             if (small_scale) {
                 courierCount = 1;
             } else {
-                courierCount = 70;
+                courierCount = 50;
             }
             for (int i=0; i<courierCount; i++) {
                 CourierModel courier = new CourierModel();

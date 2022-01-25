@@ -82,9 +82,7 @@ public class LogChecker {
                 entriesChecked += 1;
             }
         }
-        if (everythingOK) {
-            System.out.println("Couriers capacity OK, " + entriesChecked + " checked.");
-        }
+        System.out.println("Couriers capacity history " + (everythingOK ? "OK" : "WRONG") + ", " + entriesChecked + " entries checked.");
         return everythingOK;
     }
 
@@ -112,9 +110,7 @@ public class LogChecker {
             }
             entriesChecked += 1;
         }
-        if (everythingOK) {
-            System.out.println("Package delivery history OK, " + entriesChecked + " entries checked.");
-        }
+        System.out.println("Package delivery history " + (everythingOK ? "OK" : "WRONG") + ", " + entriesChecked + " entries checked.");
         return everythingOK;
     }
 
@@ -140,9 +136,8 @@ public class LogChecker {
                 entriesChecked += 1;
             }
         }
-        if (everythingOK) {
-            System.out.println("Post box capacity OK, " + entriesChecked + " entries checked.");
-        }
+
+        System.out.println("Post box capacity history " + (everythingOK ? "OK" : "WRONG") + ", " + entriesChecked + " entries checked.");
         return everythingOK;
     }
 }
