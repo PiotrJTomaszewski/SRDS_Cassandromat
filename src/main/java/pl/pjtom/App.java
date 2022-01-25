@@ -11,9 +11,9 @@ public class App {
             if (args.length >= 1 && args[0].equals("check_logs")) {
                 LogChecker logChecker = new LogChecker(cassClient);
                 logChecker.checkLogs();
-            } else {
+            } else if (args.length >= 1 && args[0].equals("stress_test")) {
                 System.out.println("Removing old data. Please wait");
-                if (args.length >= 1 && args[0].equals("create_data")) {
+                if (args.length >= 2 && args[1].equals("create_data")) {
                     cassClient.truncatePostBox();
                     cassClient.truncateCourier();
                     cassClient.truncateClient();
@@ -26,6 +26,9 @@ public class App {
                 cassClient.truncateCourierTrunkContent();
                 StressTester stressTester = new StressTester(cassClient);
                 stressTester.run();
+            } else {
+                Menu menu = new Menu(cassClient);
+                menu.showMenu();
             }
         } catch (CassandraBackendException e) {
             System.err.println(e.getMessage());

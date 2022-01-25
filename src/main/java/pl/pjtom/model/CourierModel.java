@@ -1,5 +1,6 @@
 package pl.pjtom.model;
 
+import java.util.Formatter;
 import java.util.UUID;
 
 public class CourierModel {
@@ -24,5 +25,14 @@ public class CourierModel {
 
     public void setCapacity(int capacity) {
         this.capacity = capacity;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        Formatter fmt = new Formatter(sb);
+        fmt.format("{courier_id: %s, capacity: %d}", courierID, capacity);
+        fmt.close();
+        return sb.toString();
     }
 }
