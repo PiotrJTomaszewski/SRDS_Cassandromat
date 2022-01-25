@@ -86,24 +86,23 @@ public class Courier implements Runnable {
         }
     }
 
-    private Optional<PostBoxModel> findFreePostBox(String district) throws CassandraBackendException {
-        ArrayList<PostBoxModel> postBoxes = cassClient.getPostBoxesInDistrict(district);
-        for (PostBoxModel postBox: postBoxes) {
-            int postBoxPackagesCount = cassClient.countPackagesInPostBox(postBox.getPostBoxID());
-            if (postBoxPackagesCount < postBox.getCapacity()) {
-                return Optional.of(postBox);
-            }
-        }
-        return Optional.empty();
-    }
-
     public void deliverPackages() throws CassandraBackendException {        
         ArrayList<PackageModel> packagesInTrunk = cassClient.getPackagesInTrunk(courierModel.getCourierID());
-        ArrayList<PackageModel> packagesToClaim = new ArrayList<>();
-        packagesToClaim.addAll(packagesInTrunk);
+        ArrayList<PackageModel> packagesToClaim = new ArrayList<>(packagesInTrunk);
         String district = packagesInTrunk.get(0).getDistrictDest();
         while (packagesInTrunk.size() > 0) {
-            Optional<PostBoxModel> freePostBox = findFreePostBox(district);
+            // Find a post box with free space
+            ArrayList<PostBoxModel> postBoxes = cassClient.getPostBoxesInDistrict(district);
+            Optional<PostBoxModel> freePostBox = Optional.empty();
+            int freePostBoxCapacityLeft = 0;
+            for (PostBoxModel postBox: postBoxes) {
+                int postBoxPackagesCount = cassClient.countPackagesInPostBox(postBox.getPostBoxID());
+                if (postBoxPackagesCount < postBox.getCapacity()) {
+                    freePostBox = Optional.of(postBox);
+                    freePostBoxCapacityLeft = postBox.getCapacity() - postBoxPackagesCount;
+                    break;
+                }
+            }
 
             if (freePostBox.isPresent()) {
                 // Packages for which a space in a post box was claimed
@@ -114,6 +113,10 @@ public class Courier implements Runnable {
                     cassClient.upsertPackageInPostBox(postBox.getPostBoxID(), p);
                     claimedPackages.add(p);
                     System.out.println("Claimed space in " + postBox.getPostBoxID() + " for " + p.getPackageID() + ".");
+                    freePostBoxCapacityLeft -= 1;
+                    if (freePostBoxCapacityLeft == 0) {
+                        break;
+                    }
                 }
                 packagesToClaim.removeAll(claimedPackages);
 
