@@ -16,6 +16,7 @@ public class Courier implements Runnable {
     private CassandraConnector cassClient;
     private Random rand = new Random();
     private CourierModel courierModel;
+    private ArrayList<PackageModel> trunkContent = new ArrayList<>();
 
     public Courier(CassandraConnector cassClient, CourierModel courierModel) throws CassandraBackendException {
         this.cassClient = cassClient;
@@ -24,7 +25,6 @@ public class Courier implements Runnable {
 
     public void loadTheTrunk() throws CassandraBackendException {
         boolean stayAtWarehouse = true;
-        int packagesInTrunkCount = 0;
         while (stayAtWarehouse) {
             // Get the list of free packages in warehouse
             ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouse();
@@ -36,7 +36,7 @@ public class Courier implements Runnable {
             // Claiming packages the courier wants to pick up
             for (PackageModel p: packages) {
                 if (p.getCourierID() == null && p.getDistrictDest().equals(destinationDistrict)) {
-                    if (packagesInTrunkCount + claimedPackages.size() < courierModel.getCapacity()) {
+                    if (trunkContent.size() + claimedPackages.size() < courierModel.getCapacity()) {
                         cassClient.updateCourierIDPackageInWarehouseByID(p.getPackageID(), courierModel.getCourierID());
                         claimedPackages.add(p);
                     } else {
@@ -47,7 +47,7 @@ public class Courier implements Runnable {
 
             // Wait to see if the packages were successfully claimed
             try {
-                Thread.sleep(300 + rand.nextInt(100));
+                Thread.sleep(150 + rand.nextInt(50));
             } catch (InterruptedException e) {
                 System.err.println(e.getMessage());
             }
@@ -58,27 +58,26 @@ public class Courier implements Runnable {
                 if (checkPackage != null && checkPackage.getCourierID().equals(courierModel.getCourierID())) {
                     p.setCourierID(courierModel.getCourierID());
                     System.out.println(courierModel.getCourierID() + ": I'm taking package " + p.getPackageID() + ".");
-                    cassClient.upsertPackageInTrunk(p);
+                    trunkContent.add(p);
                     cassClient.deletePackageFromWarehouseByID(p.getPackageID());
                     cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE, courierModel.getCourierID(), null));
-                    packagesInTrunkCount += 1;
                 } else {
                     // System.out.println("Someone else took the package " + p.getPackageID() + ".");
                 }
             }
 
-            System.out.print("I have " + packagesInTrunkCount + "/" + courierModel.getCapacity() + " packages.");
-            if (packagesInTrunkCount == courierModel.getCapacity()) {
+            System.out.print("I have " + trunkContent.size() + "/" + courierModel.getCapacity() + " packages.");
+            if (trunkContent.size() == courierModel.getCapacity()) {
                 // System.out.println("Leaving the warehouse with a full trunk");
                 stayAtWarehouse = false;
             } else {
-                if (packagesInTrunkCount > 0 && rand.nextInt(100) < 30) {
+                if (trunkContent.size() > 0 && rand.nextInt(100) < 30) {
                     // System.out.println(" I'm leaving anyway");
                     stayAtWarehouse = false;
                 } else {
                     // System.out.println(" I'll stay for a bit longer");
                     try {
-                        Thread.sleep(500 + rand.nextInt(100));
+                        Thread.sleep(250 + rand.nextInt(50));
                     } catch (InterruptedException e) {
                         System.err.println(e.getMessage());
                     }
@@ -88,10 +87,10 @@ public class Courier implements Runnable {
     }
 
     public void deliverPackages() throws CassandraBackendException {        
-        ArrayList<PackageModel> packagesInTrunk = cassClient.getPackagesInTrunk(courierModel.getCourierID());
-        ArrayList<PackageModel> packagesToClaim = new ArrayList<>(packagesInTrunk);
-        String district = packagesInTrunk.get(0).getDistrictDest();
-        while (packagesInTrunk.size() > 0) {
+        // ArrayList<PackageModel> packagesInTrunk = cassClient.getPackagesInTrunk(courierModel.getCourierID());
+        ArrayList<PackageModel> packagesToClaim = new ArrayList<>(trunkContent);
+        String district = trunkContent.get(0).getDistrictDest();
+        while (trunkContent.size() > 0) {
             // Find a post box with free space
             ArrayList<PostBoxModel> postBoxes = cassClient.getPostBoxesInDistrict(district);
             Optional<PostBoxModel> freePostBox = Optional.empty();
@@ -123,7 +122,7 @@ public class Courier implements Runnable {
 
                 // System.out.println("Traveling to the post box " + postBox.getPostBoxID() + ".");
                 try {
-                    Thread.sleep(300 + rand.nextInt(100));
+                    Thread.sleep(150 + rand.nextInt(50));
                 } catch (InterruptedException e) {
                     System.err.println(e.getMessage());
                 }
@@ -143,8 +142,8 @@ public class Courier implements Runnable {
                 for (PackageModel p: claimedPackages) {
                     p.setIsReadyToPickup(true);
                     cassClient.upsertPackageInPostBox(postBox.getPostBoxID(), p);
-                    packagesInTrunk.remove(p);
-                    cassClient.deletePackageFromTrunkByID(courierModel.getCourierID(), p.getPackageID());
+                    trunkContent.remove(p);
+                    // cassClient.deletePackageFromTrunkByID(courierModel.getCourierID(), p.getPackageID());
                     cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PUT_PACKAGE_IN_POSTBOX, courierModel.getCourierID(), postBox.getPostBoxID()));
                     System.out.println(courierModel.getCourierID() + ": Putting package " + p.getPackageID() + " in post box " + postBox.getPostBoxID() + ".");
                 }
