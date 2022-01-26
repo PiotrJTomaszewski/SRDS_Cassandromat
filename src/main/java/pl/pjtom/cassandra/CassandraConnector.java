@@ -43,7 +43,7 @@ public class CassandraConnector {
         cluster.close();
     }
 
-    private static PreparedStatement SELECT_PACKAGES_IN_WAREHOUSE;
+    private static PreparedStatement SELECT_PACKAGES_IN_WAREHOUSE_BY_DISTRICT;
     private static PreparedStatement SELECT_PACKAGE_IN_WAREHOUSE_BY_ID;
     private static PreparedStatement UPSERT_PACKAGE_IN_WAREHOUSE;
     private static PreparedStatement UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID;
@@ -81,11 +81,11 @@ public class CassandraConnector {
 
     private void prepareStatements() throws CassandraBackendException {
         try {
-            SELECT_PACKAGES_IN_WAREHOUSE = session.prepare("SELECT * FROM WarehouseContent;");
-            SELECT_PACKAGE_IN_WAREHOUSE_BY_ID = session.prepare("SELECT * FROM WarehouseContent WHERE package_id = ?;");
+            SELECT_PACKAGES_IN_WAREHOUSE_BY_DISTRICT = session.prepare("SELECT * FROM WarehouseContent WHERE district_dest = ?;");
+            SELECT_PACKAGE_IN_WAREHOUSE_BY_ID = session.prepare("SELECT * FROM WarehouseContent WHERE district_dest = ? AND package_id = ?;");
             UPSERT_PACKAGE_IN_WAREHOUSE = session.prepare("INSERT INTO WarehouseContent (package_id, courier_id, district_dest, client_id) VALUES (?, ?, ?, ?);");
-            UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID = session.prepare("UPDATE WarehouseContent USING TTL 15 SET courier_id = ? WHERE package_id = ?;");
-            DELETE_PACKAGE_FROM_WAREHOUSE_BY_ID = session.prepare("DELETE FROM WarehouseContent WHERE package_id = ?;");
+            UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID = session.prepare("UPDATE WarehouseContent USING TTL 15 SET courier_id = ? WHERE district_dest = ? AND package_id = ?;");
+            DELETE_PACKAGE_FROM_WAREHOUSE_BY_ID = session.prepare("DELETE FROM WarehouseContent WHERE district_dest = ? AND package_id = ?;");
 
             SELECT_POSTBOXES = session.prepare("SELECT * FROM PostBox;");
             SELECT_POSTBOXES_IN_DISTRICT = session.prepare("SELECT * FROM PostBox WHERE district = ?;");
@@ -122,10 +122,11 @@ public class CassandraConnector {
         }
     }
 
-    public ArrayList<PackageModel> getPackagesInWarehouse() throws CassandraBackendException {
-        BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_WAREHOUSE);
-        ArrayList<PackageModel> packages = new ArrayList<>();
+    public ArrayList<PackageModel> getPackagesInWarehouseByDistrict(String district) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_WAREHOUSE_BY_DISTRICT);
+        bs.bind(district);
 
+        ArrayList<PackageModel> packages = new ArrayList<>();
         ResultSet rs = null;
         try {
             rs = session.execute(bs);
@@ -191,9 +192,9 @@ public class CassandraConnector {
         }
     }
 
-    public void deletePackageFromWarehouseByID(String packageID) throws CassandraBackendException {
+    public void deletePackageFromWarehouseByID(String district, String packageID) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(DELETE_PACKAGE_FROM_WAREHOUSE_BY_ID);
-        bs.bind(packageID);
+        bs.bind(district, packageID);
 
         try {
             session.execute(bs);

@@ -26,16 +26,18 @@ public class Courier implements Runnable {
     public void loadTheTrunk() throws CassandraBackendException {
         boolean stayAtWarehouse = true;
         while (stayAtWarehouse) {
-            // Get the list of free packages in warehouse
-            ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouse();
             ArrayList<String> districts = cassClient.getDistricts();
+            // Choose next trip destination district
             String destinationDistrict = districts.get(rand.nextInt(districts.size()));
             ArrayList<PackageModel> claimedPackages = new ArrayList<>();
             // System.out.println(courierModel.getCourierID() + ": Going to the " + destinationDistrict + " district.");
 
+            // Get the list of free packages in warehouse
+            ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouseByDistrict(destinationDistrict);
+
             // Claiming packages the courier wants to pick up
             for (PackageModel p: packages) {
-                if (p.getCourierID() == null && p.getDistrictDest().equals(destinationDistrict)) {
+                if (p.getCourierID() == null) {
                     if (trunkContent.size() + claimedPackages.size() < courierModel.getCapacity()) {
                         cassClient.updateCourierIDPackageInWarehouseByID(p.getPackageID(), courierModel.getCourierID());
                         claimedPackages.add(p);
@@ -59,7 +61,7 @@ public class Courier implements Runnable {
                     p.setCourierID(courierModel.getCourierID());
                     System.out.println(courierModel.getCourierID() + ": I'm taking package " + p.getPackageID() + ".");
                     trunkContent.add(p);
-                    cassClient.deletePackageFromWarehouseByID(p.getPackageID());
+                    cassClient.deletePackageFromWarehouseByID(destinationDistrict, p.getPackageID());
                     cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE, courierModel.getCourierID(), null));
                 } else {
                     // System.out.println("Someone else took the package " + p.getPackageID() + ".");

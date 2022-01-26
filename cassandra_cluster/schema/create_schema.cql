@@ -49,7 +49,7 @@ CREATE TABLE WarehouseContent (
   courier_id text,
   district_dest text,
   client_id text,
-  PRIMARY KEY (package_id)
+  PRIMARY KEY (district_dest, package_id)
 );
 
 CREATE TABLE Client (

@@ -131,7 +131,7 @@ public class Menu {
             client.generateClientID();
         }
         ArrayList<String> districts = cassClient.getDistricts();
-        client.setDistrict(textIO.newStringInputReader().withPossibleValues(districts).read("District"));
+        client.setDistrict(textIO.newStringInputReader().withNumberedPossibleValues(districts).read("District"));
         cassClient.upsertClient(client);
         displayClients(Arrays.asList(new ClientModel[] { client }));
     }
@@ -151,21 +151,21 @@ public class Menu {
             postBox.generatePostboxID();
         }
         ArrayList<String> districts = cassClient.getDistricts();
-        postBox.setDistrict(textIO.newStringInputReader().withPossibleValues(districts).read("District"));
+        postBox.setDistrict(textIO.newStringInputReader().withNumberedPossibleValues(districts).read("District"));
         cassClient.upsertPostbox(postBox);
         displayPostBoxes(Arrays.asList(new PostBoxModel[] { postBox }));
     }
 
     private void listPostBoxes() throws CassandraBackendException {
         ArrayList<String> districts = cassClient.getDistricts();
-        String district = textIO.newStringInputReader().withPossibleValues(districts).read("District");
+        String district = textIO.newStringInputReader().withNumberedPossibleValues(districts).read("District");
         ArrayList<PostBoxModel> postBoxes = cassClient.getPostBoxesInDistrict(district);
         displayPostBoxes(postBoxes);
     }
 
     private void listPackagesInPostBox() throws CassandraBackendException {
         ArrayList<String> districts = cassClient.getDistricts();
-        String district = textIO.newStringInputReader().withPossibleValues(districts).read("District");
+        String district = textIO.newStringInputReader().withNumberedPossibleValues(districts).read("District");
 
         ArrayList<PostBoxModel> postBoxesInDistrict = cassClient.getPostBoxesInDistrict(district);
 
@@ -174,7 +174,7 @@ public class Menu {
             postBoxesInDistrictIDs.add(postBox.getPostBoxID());
         }
 
-        String postBoxID = textIO.newStringInputReader().withPossibleValues(postBoxesInDistrictIDs).read("Postbox ID");
+        String postBoxID = textIO.newStringInputReader().withNumberedPossibleValues(postBoxesInDistrictIDs).read("Postbox ID");
 
         displayPackages(cassClient.getPackagesInPostBox(postBoxID));
     }
@@ -194,7 +194,7 @@ public class Menu {
         for (ClientModel client : clients) {
             clientsIDs.add(client.getClientID());
         }
-        String clientID = textIO.newStringInputReader().withPossibleValues(clientsIDs).read("Client ID (recipient)");
+        String clientID = textIO.newStringInputReader().withNumberedPossibleValues(clientsIDs).read("Client ID (recipient)");
         packageModel.setClientID(clientID);
         for (ClientModel client : clients) {
             if (client.getClientID().equals(clientID)) {
@@ -207,7 +207,9 @@ public class Menu {
     }
 
     private void listPackagesInWarehouse() throws CassandraBackendException {
-        ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouse();
+        ArrayList<String> districts = cassClient.getDistricts();
+        String district = textIO.newStringInputReader().withNumberedPossibleValues(districts).read("Dest. district");
+        ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouseByDistrict(district);
         displayPackages(packages);
     }
 
@@ -221,7 +223,7 @@ public class Menu {
         for (CourierModel courier: couriers) {
             couriersIDs.add(courier.getCourierID());
         }
-        String courierID = textIO.newStringInputReader().withPossibleValues(couriersIDs).read("Courier ID");
+        String courierID = textIO.newStringInputReader().withNumberedPossibleValues(couriersIDs).read("Courier ID");
         Courier courier;
         for (CourierModel courierModel: couriers) {
             if (courierModel.getCourierID().equals(courierID)) {
@@ -239,7 +241,7 @@ public class Menu {
         for (ClientModel client: clients) {
             clientsIDs.add(client.getClientID());
         }
-        String clientID = textIO.newStringInputReader().withPossibleValues(clientsIDs).read("Client ID");
+        String clientID = textIO.newStringInputReader().withNumberedPossibleValues(clientsIDs).read("Client ID");
         Client client;
         for (ClientModel clientModel: clients) {
             if (clientModel.getClientID().equals(clientID)) {
