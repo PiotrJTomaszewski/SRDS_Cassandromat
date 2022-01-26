@@ -13,12 +13,12 @@ public class PackageLogEntryModel implements Comparable {
 
     }
 
-    public PackageLogEntryModel(String packageID, PackageLogEvent actionType, String actorID, String postBoxID) {
+    public PackageLogEntryModel(String packageID, PackageLogEvent actionType, Date actionTime, String actorID, String postBoxID) {
         this.packageID = packageID;
         this.actionType = actionType;
+        this.actionTime = actionTime;
         this.actorID = actorID;
         this.postBoxID = postBoxID;
-        actionTime = new Date(System.currentTimeMillis());
     }
 
     public String getPackageID() {

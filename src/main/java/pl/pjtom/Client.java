@@ -1,6 +1,7 @@
 package pl.pjtom;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.Map.Entry;
@@ -45,8 +46,9 @@ public class Client implements Runnable {
             }
             // System.out.println("Picking up " + entry.getValue().size() + " packages.");
             for (PackageModel p: entry.getValue()) {
+                Date timestamp = new Date(System.currentTimeMillis());
                 cassClient.deletePackageFromPostBox(entry.getKey(), p.getPackageID());
-                cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX, clientModel.getClientID(), p.getPostBoxID()));
+                cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX, timestamp, clientModel.getClientID(), p.getPostBoxID()));
             }
         }
     }

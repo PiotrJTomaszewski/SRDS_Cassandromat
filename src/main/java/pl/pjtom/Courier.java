@@ -1,6 +1,7 @@
 package pl.pjtom;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Optional;
 import java.util.Random;
 
@@ -61,8 +62,9 @@ public class Courier implements Runnable {
                     p.setCourierID(courierModel.getCourierID());
                     System.out.println(courierModel.getCourierID() + ": I'm taking package " + p.getPackageID() + ".");
                     trunkContent.add(p);
+                    Date timestamp = new Date(System.currentTimeMillis());
                     cassClient.deletePackageFromWarehouseByID(destinationDistrict, p.getPackageID());
-                    cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE, courierModel.getCourierID(), null));
+                    cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE, timestamp, courierModel.getCourierID(), null));
                 } else {
                     // System.out.println("Someone else took the package " + p.getPackageID() + ".");
                 }
@@ -143,10 +145,11 @@ public class Courier implements Runnable {
                 // Put the rest of the claimed packages in the post box
                 for (PackageModel p: claimedPackages) {
                     p.setIsReadyToPickup(true);
+                    Date timestamp = new Date(System.currentTimeMillis());
                     cassClient.upsertPackageInPostBox(postBox.getPostBoxID(), p);
                     trunkContent.remove(p);
                     // cassClient.deletePackageFromTrunkByID(courierModel.getCourierID(), p.getPackageID());
-                    cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PUT_PACKAGE_IN_POSTBOX, courierModel.getCourierID(), postBox.getPostBoxID()));
+                    cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PUT_PACKAGE_IN_POSTBOX, timestamp, courierModel.getCourierID(), postBox.getPostBoxID()));
                     System.out.println(courierModel.getCourierID() + ": Putting package " + p.getPackageID() + " in post box " + postBox.getPostBoxID() + ".");
                 }
 
