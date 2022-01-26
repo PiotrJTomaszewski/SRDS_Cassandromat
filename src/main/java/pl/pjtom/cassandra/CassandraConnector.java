@@ -49,10 +49,6 @@ public class CassandraConnector {
     private static PreparedStatement UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID;
     private static PreparedStatement DELETE_PACKAGE_FROM_WAREHOUSE_BY_ID;
 
-    private static PreparedStatement SELECT_PACKAGES_IN_TRUNK_BY_ID;
-    private static PreparedStatement UPSERT_PACKAGE_IN_TRUNK;
-    private static PreparedStatement DELETE_PACKAGES_IN_TRUNK_BY_ID;
-
     private static PreparedStatement SELECT_POSTBOXES;
     private static PreparedStatement SELECT_POSTBOXES_IN_DISTRICT;
     private static PreparedStatement UPSERT_POSTBOX;
@@ -90,10 +86,6 @@ public class CassandraConnector {
             UPSERT_PACKAGE_IN_WAREHOUSE = session.prepare("INSERT INTO WarehouseContent (package_id, courier_id, district_dest, client_id) VALUES (?, ?, ?, ?);");
             UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID = session.prepare("UPDATE WarehouseContent USING TTL 15 SET courier_id = ? WHERE package_id = ?;");
             DELETE_PACKAGE_FROM_WAREHOUSE_BY_ID = session.prepare("DELETE FROM WarehouseContent WHERE package_id = ?;");
-
-            SELECT_PACKAGES_IN_TRUNK_BY_ID = session.prepare("SELECT * FROM CourierTrunkContent WHERE courier_id = ?;");
-            UPSERT_PACKAGE_IN_TRUNK = session.prepare("INSERT INTO CourierTrunkContent (courier_id, package_id, district_dest, client_id) VALUES (?, ?, ?, ?);");
-            DELETE_PACKAGES_IN_TRUNK_BY_ID = session.prepare("DELETE FROM CourierTrunkContent WHERE courier_id = ? AND package_id = ?;");
 
             SELECT_POSTBOXES = session.prepare("SELECT * FROM PostBox;");
             SELECT_POSTBOXES_IN_DISTRICT = session.prepare("SELECT * FROM PostBox WHERE district = ?;");
@@ -207,54 +199,6 @@ public class CassandraConnector {
             session.execute(bs);
         } catch (Exception e) {
             throw new CassandraBackendException("Could not perform user query deletePackageFromWarehouseByID. " + e.getMessage() + ".", e);
-        }
-    }
-
-    public ArrayList<PackageModel> getPackagesInTrunk(String courierID) throws CassandraBackendException {
-        BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_TRUNK_BY_ID);
-        bs.bind(courierID);
-        ResultSet rs = null;
-        try {
-            rs = session.execute(bs);
-        } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query getPackagesInTrunk. " + e.getMessage() + ".", e);
-        }
-        ArrayList<PackageModel> packages = new ArrayList<PackageModel>();
-        for (Row row: rs) {
-            PackageModel p = new PackageModel();
-            p.setCourierID(row.getString("courier_id"));
-            p.setPackageID(row.getString("package_id"));
-            p.setDistrictDest(row.getString("district_dest"));
-            p.setClientID(row.getString("client_id"));
-            packages.add(p);
-        }
-        return packages;
-    }
-
-    public void upsertPackageInTrunk(PackageModel p) throws CassandraBackendException {
-        BoundStatement bs = new BoundStatement(UPSERT_PACKAGE_IN_TRUNK);
-        bs.bind(
-            p.getCourierID(),
-            p.getPackageID(),
-            p.getDistrictDest(),
-            p.getClientID()
-        );
-
-        try {
-            session.execute(bs);
-        } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query upsertPackageInTrunk. " + e.getMessage() + ".", e);
-        }
-    }
-
-    public void deletePackageFromTrunkByID(String courierID, String packageID) throws CassandraBackendException {
-        BoundStatement bs = new BoundStatement(DELETE_PACKAGES_IN_TRUNK_BY_ID);
-        bs.bind(courierID, packageID);
-
-        try {
-            session.execute(bs);
-        } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query deletePackageFromTrunkByID. " + e.getMessage() + ".", e);
         }
     }
 
