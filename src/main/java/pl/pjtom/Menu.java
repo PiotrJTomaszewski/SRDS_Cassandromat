@@ -1,5 +1,6 @@
 package pl.pjtom;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
@@ -87,6 +88,11 @@ public class Menu {
                 props.setPromptColor("red");
                 terminal.println(e.getMessage());
                 props.setPromptColor("default");
+            }
+            try {
+                System.in.read();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

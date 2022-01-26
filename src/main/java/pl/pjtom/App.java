@@ -23,7 +23,6 @@ public class App {
                 cassClient.truncatePostBoxContent();
                 cassClient.truncatePackageLog();
                 cassClient.truncateWarehouseContent();
-                cassClient.truncateCourierTrunkContent();
                 StressTester stressTester = new StressTester(cassClient);
                 stressTester.run();
             } else {

@@ -39,7 +39,7 @@ public class Courier implements Runnable {
             for (PackageModel p: packages) {
                 if (p.getCourierID() == null) {
                     if (trunkContent.size() + claimedPackages.size() < courierModel.getCapacity()) {
-                        cassClient.updateCourierIDPackageInWarehouseByID(p.getPackageID(), courierModel.getCourierID());
+                        cassClient.updateCourierIDPackageInWarehouseByID(destinationDistrict, p.getPackageID(), courierModel.getCourierID());
                         claimedPackages.add(p);
                     } else {
                         break;
@@ -56,7 +56,7 @@ public class Courier implements Runnable {
 
             // Move successfully claimed packages to the trunk
             for (PackageModel p: claimedPackages) {
-                PackageModel checkPackage = cassClient.getPackageInWarehouseByID(p.getPackageID());
+                PackageModel checkPackage = cassClient.getPackageInWarehouseByID(destinationDistrict, p.getPackageID());
                 if (checkPackage != null && checkPackage.getCourierID().equals(courierModel.getCourierID())) {
                     p.setCourierID(courierModel.getCourierID());
                     System.out.println(courierModel.getCourierID() + ": I'm taking package " + p.getPackageID() + ".");

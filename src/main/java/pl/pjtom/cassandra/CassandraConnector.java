@@ -75,7 +75,6 @@ public class CassandraConnector {
     private static PreparedStatement TRUNCATE_COURIER;
     private static PreparedStatement TRUNCATE_PACKAGE_LOG;
     private static PreparedStatement TRUNCATE_WAREHOUSE_CONTENT;
-    private static PreparedStatement TRUNCATE_COURIER_TRUNK_CONTENT;
     private static PreparedStatement TRUNCATE_CLIENT;
     private static PreparedStatement TRUNCATE_DISTRICT;
 
@@ -84,7 +83,7 @@ public class CassandraConnector {
             SELECT_PACKAGES_IN_WAREHOUSE_BY_DISTRICT = session.prepare("SELECT * FROM WarehouseContent WHERE district_dest = ?;");
             SELECT_PACKAGE_IN_WAREHOUSE_BY_ID = session.prepare("SELECT * FROM WarehouseContent WHERE district_dest = ? AND package_id = ?;");
             UPSERT_PACKAGE_IN_WAREHOUSE = session.prepare("INSERT INTO WarehouseContent (package_id, courier_id, district_dest, client_id) VALUES (?, ?, ?, ?);");
-            UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID = session.prepare("UPDATE WarehouseContent USING TTL 15 SET courier_id = ? WHERE district_dest = ? AND package_id = ?;");
+            UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID = session.prepare("UPDATE WarehouseContent USING TTL 5 SET courier_id = ? WHERE district_dest = ? AND package_id = ?;");
             DELETE_PACKAGE_FROM_WAREHOUSE_BY_ID = session.prepare("DELETE FROM WarehouseContent WHERE district_dest = ? AND package_id = ?;");
 
             SELECT_POSTBOXES = session.prepare("SELECT * FROM PostBox;");
@@ -113,7 +112,6 @@ public class CassandraConnector {
             TRUNCATE_COURIER = session.prepare("TRUNCATE Courier;");
             TRUNCATE_PACKAGE_LOG = session.prepare("TRUNCATE PackageLog;");
             TRUNCATE_WAREHOUSE_CONTENT = session.prepare("TRUNCATE WarehouseContent;");
-            TRUNCATE_COURIER_TRUNK_CONTENT = session.prepare("TRUNCATE CourierTrunkContent;");
             TRUNCATE_CLIENT = session.prepare("TRUNCATE Client;");
             TRUNCATE_DISTRICT = session.prepare("TRUNCATE District;");
 
@@ -144,9 +142,9 @@ public class CassandraConnector {
         return packages;
     }
 
-    public PackageModel getPackageInWarehouseByID(String packageID) throws CassandraBackendException {
+    public PackageModel getPackageInWarehouseByID(String district, String packageID) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(SELECT_PACKAGE_IN_WAREHOUSE_BY_ID);
-        bs.bind(packageID);
+        bs.bind(district, packageID);
         ResultSet rs = null;
         try {
             rs = session.execute(bs);
@@ -181,9 +179,9 @@ public class CassandraConnector {
         }
     }
 
-    public void updateCourierIDPackageInWarehouseByID(String packageID, String courierID) throws CassandraBackendException {
+    public void updateCourierIDPackageInWarehouseByID(String destDistrict, String packageID, String courierID) throws CassandraBackendException {
         BoundStatement bs = new BoundStatement(UPDATE_COURIER_ID_PACKAGE_IN_WAREHOUSE_BY_ID);
-        bs.bind(courierID, packageID);
+        bs.bind(courierID, destDistrict, packageID);
 
         try {
             session.execute(bs);
@@ -504,15 +502,6 @@ public class CassandraConnector {
             session.execute(bs);
         } catch (Exception e) {
             throw new CassandraBackendException("Could not perform user query truncateWarehouseContent. " + e.getMessage() + ".", e);
-        }
-    }
-
-    public void truncateCourierTrunkContent() throws CassandraBackendException {
-        BoundStatement bs = new BoundStatement(TRUNCATE_COURIER_TRUNK_CONTENT);
-        try {
-            session.execute(bs);
-        } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform user query truncateCourierTrunkContent. " + e.getMessage() + ".", e);
         }
     }
 
