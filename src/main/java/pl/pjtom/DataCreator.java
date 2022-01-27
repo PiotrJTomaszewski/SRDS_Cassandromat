@@ -46,7 +46,7 @@ public class DataCreator {
             for (int i=0; i<courierCount; i++) {
                 CourierModel courier = new CourierModel();
                 courier.generateCourierID();
-                courier.setCapacity(rand.nextInt(2) + 2);
+                courier.setCapacity(rand.nextInt(5) + 10);
                 cassClient.upsertCourier(courier);
             }
 

@@ -68,16 +68,16 @@ public class LogChecker {
             for (PackageLogEntryModel entry: entriesByActor.get(courier.getCourierID())) {
                 if (entry.getActionType() == PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE) {
                     capacityLeft -= 1;
+                    if (capacityLeft < 0) {
+                        everythingOK = false;
+                        System.out.println("Courier " + courier.getCourierID() + " picked up too many packages.");
+                    }
                 } else if (entry.getActionType() == PackageLogEvent.PUT_PACKAGE_IN_POSTBOX) {
                     capacityLeft += 1;
-                }
-                if (capacityLeft < 0) {
-                    everythingOK = false;
-                    System.out.println("Courier " + courier.getCourierID() + " picked up too many packages.");
-                }
-                if (capacityLeft > courier.getCapacity()) {
-                    everythingOK = false;
-                    System.out.println("Courier " + courier.getCourierID() + " taken out more pacakes than he put in.");
+                    if (capacityLeft > courier.getCapacity()) {
+                        everythingOK = false;
+                        System.out.println("Courier " + courier.getCourierID() + " taken out more pacakes than he put in.");
+                    }
                 }
                 entriesChecked += 1;
             }
@@ -95,18 +95,18 @@ public class LogChecker {
             for (PackageLogEntryModel logEntry: mapEntry.getValue()) {
                 if (logEntry.getActionType() == PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE) {
                     pickedFromWarehouseCount += 1;
+                    if (pickedFromWarehouseCount > 1) {
+                        everythingOK = false;
+                        System.out.println("Package " + mapEntry.getKey() + " was taken from warehouse more than once.");
+                    }
                 }
                 if (logEntry.getActionType() == PackageLogEvent.PUT_PACKAGE_IN_POSTBOX) {
                     putInPostBoxCount += 1;
+                    if (putInPostBoxCount > 1) {
+                        everythingOK = false;
+                        System.out.println("Package " + mapEntry.getKey() + " was put in post box more than once.");
+                    }
                 }
-            }
-            if (pickedFromWarehouseCount > 1) {
-                everythingOK = false;
-                System.out.println("Package " + mapEntry.getKey() + " was taken from warehouse more than once.");
-            }
-            if (putInPostBoxCount > 1) {
-                everythingOK = false;
-                System.out.println("Package " + mapEntry.getKey() + " was put in post box more than once.");
             }
             entriesChecked += 1;
         }
@@ -122,16 +122,16 @@ public class LogChecker {
             for (PackageLogEntryModel entry: entriesByPostBox.get(postBox.getPostBoxID())) {
                 if (entry.getActionType() == PackageLogEvent.PUT_PACKAGE_IN_POSTBOX) {
                     capacityLeft -= 1;
+                    if (capacityLeft < 0) {
+                        everythingOK = false;
+                        System.out.println("Post box " + postBox.getPostBoxID() + " has too many packages.");
+                    }
                 } else if (entry.getActionType() == PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX) {
                     capacityLeft += 1;
-                }
-                if (capacityLeft < 0) {
-                    everythingOK = false;
-                    System.out.println("Post box " + postBox.getPostBoxID() + " has too many packages.");
-                }
-                if (capacityLeft > postBox.getCapacity()) {
-                    everythingOK = false;
-                    System.out.println("Post box " + postBox.getPostBoxID() + " has less than 0 pacakges.");
+                    if (capacityLeft > postBox.getCapacity()) {
+                        everythingOK = false;
+                        System.out.println("Post box " + postBox.getPostBoxID() + " has less than 0 pacakges.");
+                    }
                 }
                 entriesChecked += 1;
             }

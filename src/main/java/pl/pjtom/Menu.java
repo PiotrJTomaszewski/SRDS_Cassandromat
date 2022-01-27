@@ -300,7 +300,7 @@ public class Menu {
         at.addRow("Postbox ID", "District", "Capacity");
         for (PostBoxModel postBox : postBoxes) {
             at.addRule();
-            at.addRow(postBox.getPostBoxID(), postBox.getDistrict(), postBox.getDistrict());
+            at.addRow(postBox.getPostBoxID(), postBox.getDistrict(), postBox.getCapacity());
         }
         at.addRule();
         terminal.print(at.render());
@@ -314,7 +314,7 @@ public class Menu {
             at.addRule();
             at.addRow(
                 p.getPackageID(),
-                p.getDistrictDest(),
+                p.getDistrictDest() != null ? p.getDistrictDest() : "",
                 p.getClientID(),
                 p.getCourierID() != null ? p.getCourierID() : "",
                 p.getIsReadyToPickup(),
