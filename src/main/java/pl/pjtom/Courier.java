@@ -58,7 +58,7 @@ public class Courier implements Runnable {
             // Move successfully claimed packages to the trunk
             for (PackageModel p: claimedPackages) {
                 PackageModel checkPackage = cassClient.getPackageInWarehouseByID(destinationDistrict, p.getPackageID());
-                if (checkPackage != null && checkPackage.getCourierID().equals(courierModel.getCourierID())) {
+                if (checkPackage != null && checkPackage.getCourierID() != null && checkPackage.getCourierID().equals(courierModel.getCourierID())) {
                     p.setCourierID(courierModel.getCourierID());
                     System.out.println(courierModel.getCourierID() + ": I'm taking package " + p.getPackageID() + ".");
                     trunkContent.add(p);
