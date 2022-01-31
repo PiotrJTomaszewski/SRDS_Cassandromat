@@ -12,10 +12,15 @@ public class StressTester {
     private ArrayList<Courier> couriers = new ArrayList<>();
     private ArrayList<Client> clients = new ArrayList<>();
 
-    public StressTester(CassandraConnector cassClient) throws CassandraBackendException {
+    public StressTester(CassandraConnector cassClient, int nodeCount, int nodeID) throws CassandraBackendException {
         this.cassClient = cassClient;
         ArrayList<CourierModel> courierModels = cassClient.getCouriers();
         ArrayList<ClientModel> clientModels = cassClient.getClients();
+        // If there are other nodes present, use only a part of couriers and clients
+        if (nodeCount > 1) {
+            courierModels.stream().filter(c -> (c.getCourierID().hashCode() % nodeCount) == nodeID);
+            clientModels.stream().filter(c -> (c.getClientID().hashCode() % nodeCount) == nodeID);
+        }
         for (CourierModel courierModel: courierModels) {
             couriers.add(new Courier(cassClient, courierModel));
         }

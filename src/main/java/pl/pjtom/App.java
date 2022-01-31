@@ -7,27 +7,38 @@ public class App {
     public static void main(String[] args) {
         try {
             CassandraConnector cassClient = new CassandraConnector();
-            cassClient.connect("127.0.0.1", 9042, "Cassandromat");
-            if (args.length >= 1 && args[0].equals("check_logs")) {
-                LogChecker logChecker = new LogChecker(cassClient);
-                logChecker.checkLogs();
-            } else if (args.length >= 1 && args[0].equals("stress_test")) {
-                System.out.println("Removing old data. Please wait");
-                if (args.length >= 2 && args[1].equals("create_data")) {
+            String nodeAddress = args.length > 1 ? args[1] : "127.0.0.1";
+            int nodePort = args.length > 2 ? Integer.parseInt(args[2]) : 9042;
+
+            cassClient.connect(nodeAddress, nodePort, "Cassandromat");
+            switch (args[0]) {
+                case "check_logs":
+                    LogChecker logChecker = new LogChecker(cassClient);
+                    logChecker.checkLogs();
+                    break;
+                case "stress_test":
+                    int nodeCount = args.length > 3 ? Integer.parseInt(args[3]) : 1;
+                    int nodeID = args.length > 4 ? Integer.parseInt(args[4]) : 0;
+                    if (nodeID == 0) {
+                        cassClient.truncatePostBoxContent();
+                        cassClient.truncatePackageLog();
+                        cassClient.truncateWarehouseContent();
+                    }
+                    StressTester stressTester = new StressTester(cassClient, nodeCount, nodeID);
+                    stressTester.run();
+                    break;
+                case "create_data":
+                    System.out.println("Removing old data. Please wait");
                     cassClient.truncatePostBox();
                     cassClient.truncateCourier();
                     cassClient.truncateClient();
                     cassClient.truncateDistrict();
                     DataCreator.loadDataIntoCassandra(cassClient, false);
-                }
-                cassClient.truncatePostBoxContent();
-                cassClient.truncatePackageLog();
-                cassClient.truncateWarehouseContent();
-                StressTester stressTester = new StressTester(cassClient);
-                stressTester.run();
-            } else {
-                Menu menu = new Menu(cassClient);
-                menu.showMenu();
+                    break;
+                default:
+                    Menu menu = new Menu(cassClient);
+                    menu.showMenu();
+                    break;
             }
         } catch (CassandraBackendException e) {
             System.err.println(e.getMessage());

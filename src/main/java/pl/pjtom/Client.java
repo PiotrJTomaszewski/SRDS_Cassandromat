@@ -57,6 +57,10 @@ public class Client implements Runnable {
         return clientModel;
     }
 
+    public String getClientID() {
+        return clientModel.getClientID();
+    }
+
     @Override
     public void run() {
         while (true) {

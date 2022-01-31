@@ -164,6 +164,10 @@ public class Courier implements Runnable {
         }
     }
 
+    public String getCourierID() {
+        return courierModel.getCourierID();
+    }
+
     @Override
     public void run() {
         while (true) {
