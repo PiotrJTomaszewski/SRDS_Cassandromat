@@ -18,6 +18,7 @@ public class Courier implements Runnable {
     private Random rand = new Random();
     private CourierModel courierModel;
     private ArrayList<PackageModel> trunkContent = new ArrayList<>();
+    String destinationDistrict;
 
     public Courier(CassandraConnector cassClient, CourierModel courierModel) throws CassandraBackendException {
         this.cassClient = cassClient;
@@ -28,7 +29,7 @@ public class Courier implements Runnable {
         boolean stayAtWarehouse = true;
         ArrayList<String> districts = cassClient.getDistricts();
         // Choose next trip destination district
-        String destinationDistrict = districts.get(rand.nextInt(districts.size()));
+        destinationDistrict = districts.get(rand.nextInt(districts.size()));
         while (stayAtWarehouse) {
             ArrayList<PackageModel> claimedPackages = new ArrayList<>();
             // System.out.println(courierModel.getCourierID() + ": Going to the " + destinationDistrict + " district.");
@@ -91,11 +92,10 @@ public class Courier implements Runnable {
     }
 
     public void deliverPackages() throws CassandraBackendException {        
-        ArrayList<PackageModel> packagesToClaim = new ArrayList<>(trunkContent);
-        String district = trunkContent.get(0).getDistrictDest();
         while (trunkContent.size() > 0) {
+            ArrayList<PackageModel> packagesToClaim = new ArrayList<>(trunkContent);
             // Find a post box with free space
-            ArrayList<PostBoxModel> postBoxes = cassClient.getPostBoxesInDistrict(district);
+            ArrayList<PostBoxModel> postBoxes = cassClient.getPostBoxesInDistrict(destinationDistrict);
             Optional<PostBoxModel> freePostBox = Optional.empty();
             int freePostBoxCapacityLeft = 0;
             for (PostBoxModel postBox: postBoxes) {
@@ -121,7 +121,6 @@ public class Courier implements Runnable {
                         break;
                     }
                 }
-                packagesToClaim.removeAll(claimedPackages);
 
                 // System.out.println("Traveling to the post box " + postBox.getPostBoxID() + ".");
                 try {
