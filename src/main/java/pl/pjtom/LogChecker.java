@@ -65,21 +65,24 @@ public class LogChecker {
         int entriesChecked = 0;
         for (CourierModel courier: couriers) {
             int capacityLeft = courier.getCapacity();
-            for (PackageLogEntryModel entry: entriesByActor.get(courier.getCourierID())) {
-                if (entry.getActionType() == PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE) {
-                    capacityLeft -= 1;
-                    if (capacityLeft < 0) {
-                        everythingOK = false;
-                        System.out.println("Courier " + courier.getCourierID() + " picked up too many packages.");
+            ArrayList<PackageLogEntryModel> packages = entriesByActor.get(courier.getCourierID());
+            if (packages != null) {
+                for (PackageLogEntryModel entry: packages) {
+                    if (entry.getActionType() == PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE) {
+                        capacityLeft -= 1;
+                        if (capacityLeft < 0) {
+                            everythingOK = false;
+                            System.out.println("Courier " + courier.getCourierID() + " picked up too many packages.");
+                        }
+                    } else if (entry.getActionType() == PackageLogEvent.PUT_PACKAGE_IN_POSTBOX) {
+                        capacityLeft += 1;
+                        if (capacityLeft > courier.getCapacity()) {
+                            everythingOK = false;
+                            System.out.println("Courier " + courier.getCourierID() + " taken out more pacakes than he put in.");
+                        }
                     }
-                } else if (entry.getActionType() == PackageLogEvent.PUT_PACKAGE_IN_POSTBOX) {
-                    capacityLeft += 1;
-                    if (capacityLeft > courier.getCapacity()) {
-                        everythingOK = false;
-                        System.out.println("Courier " + courier.getCourierID() + " taken out more pacakes than he put in.");
-                    }
+                    entriesChecked += 1;
                 }
-                entriesChecked += 1;
             }
         }
         System.out.println("Couriers capacity history " + (everythingOK ? "OK" : "WRONG") + ", " + entriesChecked + " entries checked.");

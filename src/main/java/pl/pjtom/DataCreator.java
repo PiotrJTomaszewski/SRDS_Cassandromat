@@ -60,7 +60,7 @@ public class DataCreator {
             for (int i=0; i<clientCount; i++) {
                 ClientModel client = new ClientModel();
                 client.generateClientID();
-                client.setDistrict(districts[rand.nextInt(districts.length)]);
+                client.setDistrict(districts[i % districts.length]);
                 cassClient.upsertClient(client);
             }
             System.out.println("Data created");

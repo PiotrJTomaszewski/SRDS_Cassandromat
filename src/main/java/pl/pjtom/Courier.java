@@ -26,14 +26,14 @@ public class Courier implements Runnable {
 
     public void loadTheTrunk() throws CassandraBackendException {
         boolean stayAtWarehouse = true;
+        ArrayList<String> districts = cassClient.getDistricts();
+        // Choose next trip destination district
+        String destinationDistrict = districts.get(rand.nextInt(districts.size()));
         while (stayAtWarehouse) {
-            ArrayList<String> districts = cassClient.getDistricts();
-            // Choose next trip destination district
-            String destinationDistrict = districts.get(rand.nextInt(districts.size()));
             ArrayList<PackageModel> claimedPackages = new ArrayList<>();
             // System.out.println(courierModel.getCourierID() + ": Going to the " + destinationDistrict + " district.");
 
-            // Get the list of free packages in warehouse
+            // Get the list of packages in warehouse
             ArrayList<PackageModel> packages = cassClient.getPackagesInWarehouseByDistrict(destinationDistrict);
 
             // Claiming packages the courier wants to pick up
@@ -91,7 +91,6 @@ public class Courier implements Runnable {
     }
 
     public void deliverPackages() throws CassandraBackendException {        
-        // ArrayList<PackageModel> packagesInTrunk = cassClient.getPackagesInTrunk(courierModel.getCourierID());
         ArrayList<PackageModel> packagesToClaim = new ArrayList<>(trunkContent);
         String district = trunkContent.get(0).getDistrictDest();
         while (trunkContent.size() > 0) {
