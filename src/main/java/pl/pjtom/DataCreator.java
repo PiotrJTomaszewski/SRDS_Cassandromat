@@ -13,11 +13,10 @@ import pl.pjtom.model.PostBoxModel;
 public class DataCreator {
     static private Random rand = new Random();
     static private ArrayList<ClientModel> clients;
+    static private String[] districts = {"Grunwald", "Jeżyce", "Nowe Miasto", "Stare Miasto", "Wilda"};
+    // static private String[] districts = {"Grunwald", "Jeżyce", "Wilda"};
 
-    public static void loadDataIntoCassandra(CassandraConnector cassClient, boolean small_scale) {
-        // String[] districts = {"Grunwald", "Jeżyce", "Nowe Miasto", "Stare Miasto", "Wilda"};
-        String[] districts = {"Grunwald", "Jeżyce", "Wilda"};
-
+    public static void createPostBoxesAndDistricts(CassandraConnector cassClient) {
         try {
             // Create districts
             for (String district: districts) {
@@ -36,37 +35,38 @@ public class DataCreator {
                 }
             }
 
-            // Create couriers
-            int courierCount;
-            if (small_scale) {
-                courierCount = 1;
-            } else {
-                courierCount = 50;
-            }
-            for (int i=0; i<courierCount; i++) {
-                CourierModel courier = new CourierModel();
-                courier.generateCourierID();
-                courier.setCapacity(rand.nextInt(5) + 10);
-                cassClient.upsertCourier(courier);
-            }
-
-            // Create clients
-            int clientCount;
-            if (small_scale) {
-                clientCount = 1;
-            } else {
-                clientCount = 10;
-            }
-            for (int i=0; i<clientCount; i++) {
-                ClientModel client = new ClientModel();
-                client.generateClientID();
-                client.setDistrict(districts[i % districts.length]);
-                cassClient.upsertClient(client);
-            }
-            System.out.println("Data created");
+            System.out.println("Districts & post boxes created");
         } catch (CassandraBackendException e) {
             System.err.println(e);
         }
+    }
+
+    public static ArrayList<CourierModel> createCouriers(CassandraConnector cassClient) throws CassandraBackendException {
+        // Create couriers
+        int courierCount = 20;
+        ArrayList<CourierModel> couriers = new ArrayList<>();
+        for (int i=0; i<courierCount; i++) {
+            CourierModel courier = new CourierModel();
+            courier.generateCourierID();
+            courier.setCapacity(rand.nextInt(5) + 10);
+            cassClient.upsertCourier(courier);
+            couriers.add(courier);
+        }
+        return couriers;
+    }
+
+    public static ArrayList<ClientModel> createClients(CassandraConnector cassClient) throws CassandraBackendException {
+        // Create clients
+        int clientCount = 10;
+        ArrayList<ClientModel> clients = new ArrayList<>();
+        for (int i=0; i<clientCount; i++) {
+            ClientModel client = new ClientModel();
+            client.generateClientID();
+            client.setDistrict(districts[i % districts.length]);
+            cassClient.upsertClient(client);
+            clients.add(client);
+        }
+        return clients;
     }
 
     public static void createSomePackages(CassandraConnector cassClient) throws CassandraBackendException {

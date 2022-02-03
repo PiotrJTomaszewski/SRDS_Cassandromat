@@ -11,29 +11,28 @@ public class App {
             int nodePort = args.length > 2 ? Integer.parseInt(args[2]) : 9042;
 
             cassClient.connect(nodeAddress, nodePort, "Cassandromat");
+            StressTester stressTester;
             switch (args[0]) {
                 case "check_logs":
                     LogChecker logChecker = new LogChecker(cassClient);
                     logChecker.checkLogs();
                     break;
                 case "stress_test":
-                    int nodeCount = args.length > 3 ? Integer.parseInt(args[3]) : 1;
-                    int nodeID = args.length > 4 ? Integer.parseInt(args[4]) : 0;
-                    if (nodeID == 0) {
-                        cassClient.truncatePostBoxContent();
-                        cassClient.truncatePackageLog();
-                        cassClient.truncateWarehouseContent();
-                    }
-                    StressTester stressTester = new StressTester(cassClient, nodeCount, nodeID);
+                    stressTester = new StressTester(cassClient);
                     stressTester.run();
                     break;
-                case "create_data":
+                case "stress_test_main":
                     System.out.println("Removing old data. Please wait");
                     cassClient.truncatePostBox();
                     cassClient.truncateCourier();
                     cassClient.truncateClient();
                     cassClient.truncateDistrict();
-                    DataCreator.loadDataIntoCassandra(cassClient, false);
+                    cassClient.truncatePostBoxContent();
+                    cassClient.truncatePackageLog();
+                    cassClient.truncateWarehouseContent();
+                    DataCreator.createPostBoxesAndDistricts(cassClient);
+                    stressTester = new StressTester(cassClient);
+                    stressTester.run();
                     break;
                 default:
                     Menu menu = new Menu(cassClient);
