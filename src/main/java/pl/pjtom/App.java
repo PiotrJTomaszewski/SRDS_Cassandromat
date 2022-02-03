@@ -17,10 +17,14 @@ public class App {
                     logChecker.checkLogs();
                     break;
                 case "stress_test":
-                    cassClient.truncatePostBoxContent();
-                    cassClient.truncatePackageLog();
-                    cassClient.truncateWarehouseContent();
-                    StressTester stressTester = new StressTester(cassClient);
+                    int nodeCount = args.length > 3 ? Integer.parseInt(args[3]) : 1;
+                    int nodeID = args.length > 4 ? Integer.parseInt(args[4]) : 0;
+                    if (nodeID == 0) {
+                        cassClient.truncatePostBoxContent();
+                        cassClient.truncatePackageLog();
+                        cassClient.truncateWarehouseContent();
+                    }
+                    StressTester stressTester = new StressTester(cassClient, nodeCount, nodeID);
                     stressTester.run();
                     break;
                 case "create_data":
