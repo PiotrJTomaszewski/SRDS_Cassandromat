@@ -66,9 +66,10 @@ public class Courier implements Runnable {
                     Date timestamp = new Date(System.currentTimeMillis());
                     cassClient.deletePackageFromWarehouseByID(destinationDistrict, p.getPackageID());
                     cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.TAKE_PACKAGE_FROM_WAREHOUSE, timestamp, courierModel.getCourierID(), null));
-                } else {
-                    // System.out.println("Someone else took the package " + p.getPackageID() + ".");
                 }
+                //  else {
+                    // System.out.println("Someone else took the package " + p.getPackageID() + ".");
+                // }
             }
 
             System.out.print("I have " + trunkContent.size() + "/" + courierModel.getCapacity() + " packages.");
@@ -82,7 +83,7 @@ public class Courier implements Runnable {
                 } else {
                     // System.out.println(" I'll stay for a bit longer");
                     try {
-                        Thread.sleep(250 + rand.nextInt(50));
+                        Thread.sleep(100 + rand.nextInt(20));
                     } catch (InterruptedException e) {
                         System.err.println(e.getMessage());
                     }

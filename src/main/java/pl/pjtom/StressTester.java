@@ -46,7 +46,7 @@ public class StressTester {
         while (true) {
             DataCreator.createSomePackages(cassClient);
             try {
-                Thread.sleep(600);
+                Thread.sleep(250);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
