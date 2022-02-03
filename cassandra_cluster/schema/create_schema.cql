@@ -30,6 +30,7 @@ CREATE TABLE PostBoxContent (
   package_id text,
   client_id text,
   is_ready_to_pickup boolean,
+  was_picked_up boolean,
   PRIMARY KEY (postbox_id, package_id)
 );
 

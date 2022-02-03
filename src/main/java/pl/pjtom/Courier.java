@@ -92,6 +92,17 @@ public class Courier implements Runnable {
         }
     }
 
+    private int countPackagesInPostBox(String postBoxID) throws CassandraBackendException {
+        ArrayList<PackageModel> packagesInPostBox = cassClient.getPackagesInPostBox(postBoxID);
+        int postBoxPackagesCount = 0;
+        for (PackageModel p: packagesInPostBox) {
+            if (!p.getWasPickedUp()) {
+                postBoxPackagesCount += 1;
+            }
+        }
+        return postBoxPackagesCount;
+    }
+
     public void deliverPackages() throws CassandraBackendException {        
         while (trunkContent.size() > 0) {
             ArrayList<PackageModel> packagesToClaim = new ArrayList<>(trunkContent);
@@ -100,7 +111,7 @@ public class Courier implements Runnable {
             Optional<PostBoxModel> freePostBox = Optional.empty();
             int freePostBoxCapacityLeft = 0;
             for (PostBoxModel postBox: postBoxes) {
-                int postBoxPackagesCount = cassClient.countPackagesInPostBox(postBox.getPostBoxID());
+                int postBoxPackagesCount = countPackagesInPostBox(postBox.getPostBoxID());
                 if (postBoxPackagesCount < postBox.getCapacity()) {
                     freePostBox = Optional.of(postBox);
                     freePostBoxCapacityLeft = postBox.getCapacity() - postBoxPackagesCount;
@@ -130,7 +141,7 @@ public class Courier implements Runnable {
                     System.err.println(e.getMessage());
                 }
 
-                int packagesToUnclaimCount = cassClient.countPackagesInPostBox(postBox.getPostBoxID()) - postBox.getCapacity();
+                int packagesToUnclaimCount = countPackagesInPostBox(postBox.getPostBoxID()) - postBox.getCapacity();
                 if (packagesToUnclaimCount > 0) { // Post box is full
                     // System.out.println(courierModel.getCourierID() + ": Postbox " + postBox.getPostBoxID() + " is full. I have to unclaim " + packagesToUnclaimCount + " packages.");
                     // Unclaim packages that wouldn't fit

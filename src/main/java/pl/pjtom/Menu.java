@@ -332,7 +332,7 @@ public class Menu {
     private void displayPackages(Iterable<PackageModel> packages) {
         AsciiTable at = new AsciiTable();
         at.addRule();
-        at.addRow("Package ID", "Dest. district", "Client ID", "Courier ID", "Is ready to pickup", "Postbox ID");
+        at.addRow("Package ID", "Dest. district", "Client ID", "Courier ID", "Is ready to pickup", "Postbox ID", "Was taken by client");
         for (PackageModel p : packages) {
             at.addRule();
             at.addRow(
@@ -341,7 +341,8 @@ public class Menu {
                 p.getClientID(),
                 p.getCourierID() != null ? p.getCourierID() : "",
                 p.getIsReadyToPickup(),
-                p.getPostBoxID() != null ? p.getPostBoxID() : ""
+                p.getPostBoxID() != null ? p.getPostBoxID() : "",
+                p.getWasPickedUp()
             );
         }
         at.addRule();

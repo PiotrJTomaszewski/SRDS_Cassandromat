@@ -60,6 +60,7 @@ public class CassandraConnector {
     private static PreparedStatement SELECT_PACKAGES_IN_POSTBOX;
     private static PreparedStatement SELECT_PACKAGES_IN_POSTBOX_BY_CLIENT_ID;
     private static PreparedStatement UPSERT_PACKAGE_IN_POSTBOX;
+    private static PreparedStatement UPDATE_WAS_PICKED_UP_PACKAGE_IN_POSTBOX_BY_ID;
     private static PreparedStatement DELETE_PACKAGE_FROM_POSTBOX;
 
     private static PreparedStatement SELECT_DISTRICTS;
@@ -96,7 +97,8 @@ public class CassandraConnector {
 
             SELECT_PACKAGES_IN_POSTBOX = session.prepare("SELECT * FROM PostBoxContent WHERE postbox_id = ?;");
             SELECT_PACKAGES_IN_POSTBOX_BY_CLIENT_ID = session.prepare("SELECT * FROM PostBoxContent WHERE postbox_id = ? AND client_id = ?;");
-            UPSERT_PACKAGE_IN_POSTBOX = session.prepare("INSERT INTO PostBoxContent (postbox_id, package_id, client_id, is_ready_to_pickup) VALUES (?, ?, ?, ?);");
+            UPSERT_PACKAGE_IN_POSTBOX = session.prepare("INSERT INTO PostBoxContent (postbox_id, package_id, client_id, is_ready_to_pickup, was_picked_up) VALUES (?, ?, ?, ?, ?);");
+            UPDATE_WAS_PICKED_UP_PACKAGE_IN_POSTBOX_BY_ID = session.prepare("UPDATE PostBoxContent SET was_picked_up = true WHERE postbox_id = ? AND package_id = ?;");
             DELETE_PACKAGE_FROM_POSTBOX = session.prepare("DELETE FROM PostBoxContent WHERE postbox_id = ? AND package_id = ?;");
 
             SELECT_DISTRICTS = session.prepare("SELECT * FROM District;");
@@ -303,16 +305,26 @@ public class CassandraConnector {
         return packages;
     }
 
-    public int countPackagesInPostBox(String postBoxID) throws CassandraBackendException {
-        BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_POSTBOX);
-        bs.bind(postBoxID);
-        ResultSet rs = null;
+    // public int countPackagesInPostBox(String postBoxID) throws CassandraBackendException {
+    //     BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_POSTBOX);
+    //     bs.bind(postBoxID);
+    //     ResultSet rs = null;
+    //     try {
+    //         rs = session.execute(bs);
+    //     } catch (Exception e) {
+    //         throw new CassandraBackendException("Could not perform a query countPackagesInPostBox. " + e.getMessage() + ".", e);
+    //     }
+    //     return rs.all().size();
+    // }
+
+    public void updatePackageWasPickedUpFromPostBox(String postBoxID, String packageID) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(UPDATE_WAS_PICKED_UP_PACKAGE_IN_POSTBOX_BY_ID);
+        bs.bind(postBoxID, packageID);
         try {
-            rs = session.execute(bs);
+            session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query countPackagesInPostBox. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query updatePackageWasPickedUpFromPostBox. " + e.getMessage() + ".", e);
         }
-        return rs.all().size();
     }
 
     public void upsertPackageInPostBox(String postBoxID, PackageModel p) throws CassandraBackendException {
@@ -321,7 +333,8 @@ public class CassandraConnector {
             postBoxID,
             p.getPackageID(),
             p.getClientID(),
-            p.getIsReadyToPickup()
+            p.getIsReadyToPickup(),
+            p.getWasPickedUp()
         );
 
         try {
