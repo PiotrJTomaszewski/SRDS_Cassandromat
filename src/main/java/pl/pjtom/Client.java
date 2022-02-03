@@ -11,45 +11,37 @@ import pl.pjtom.cassandra.CassandraConnector;
 import pl.pjtom.model.ClientModel;
 import pl.pjtom.model.PackageLogEvent;
 import pl.pjtom.model.PackageModel;
+import pl.pjtom.model.PostBoxModel;
 import pl.pjtom.model.PackageLogEntryModel;
 
 public class Client implements Runnable {
     private CassandraConnector cassClient;
     private ClientModel clientModel;
     private Random rand = new Random();
+    private ArrayList<PostBoxModel> postBoxesInMyDistrict;
 
-    public Client(CassandraConnector cassClient, ClientModel clientModel) {
+    public Client(CassandraConnector cassClient, ClientModel clientModel) throws CassandraBackendException {
         this.cassClient = cassClient;
         this.clientModel = clientModel;
+        postBoxesInMyDistrict = cassClient.getPostBoxesInDistrict(clientModel.getDistrict());
     }
 
     public void pickupPackages() throws CassandraBackendException {
-        ArrayList<PackageModel> packagesForMe = cassClient.getPackagesInPostBoxesByClientID(clientModel.getClientID());
-        HashMap<String, ArrayList<PackageModel>> packagesToPickupByPostBox = new HashMap<>();
+        for (PostBoxModel postBox: postBoxesInMyDistrict) {
+            ArrayList<PackageModel> packagesForMe = cassClient.getPackagesInPostBoxByClientID(postBox.getPostBoxID(), clientModel.getClientID());
 
-        for (PackageModel p: packagesForMe) {
-            if (p.getIsReadyToPickup()) {
-                String postBoxID = p.getPostBoxID();
-                if (!packagesToPickupByPostBox.containsKey(postBoxID)) {
-                    packagesToPickupByPostBox.put(postBoxID, new ArrayList<PackageModel>());
+            for (PackageModel p: packagesForMe) {
+                if (p.getIsReadyToPickup()) {
+                    Date timestamp = new Date(System.currentTimeMillis());
+                    cassClient.deletePackageFromPostBox(postBox.getPostBoxID(), p.getPackageID());
+                    cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX, timestamp, clientModel.getClientID(), p.getPostBoxID()));
+                    System.out.println(clientModel.getClientID() + ": Taking package " + p.getPackageID() + " from postbox " + postBox.getPostBoxID());
                 }
-                packagesToPickupByPostBox.get(postBoxID).add(p);
             }
-        }
-
-        for (Entry<String, ArrayList<PackageModel>> entry: packagesToPickupByPostBox.entrySet()) {
-            // System.out.println("Traveling to post box " + entry.getKey() + ".");
             try {
                 Thread.sleep(100 + rand.nextInt(10));
             } catch (InterruptedException e) {
                 System.err.println(e.getMessage());
-            }
-            // System.out.println("Picking up " + entry.getValue().size() + " packages.");
-            for (PackageModel p: entry.getValue()) {
-                Date timestamp = new Date(System.currentTimeMillis());
-                cassClient.deletePackageFromPostBox(entry.getKey(), p.getPackageID());
-                cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX, timestamp, clientModel.getClientID(), p.getPostBoxID()));
-                System.out.println("Taking package " + p.getPackageID() + " from postbox " + entry.getKey());
             }
         }
     }

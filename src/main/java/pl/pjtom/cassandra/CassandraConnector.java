@@ -54,7 +54,7 @@ public class CassandraConnector {
     private static PreparedStatement UPSERT_POSTBOX;
 
     private static PreparedStatement SELECT_PACKAGES_IN_POSTBOX;
-    private static PreparedStatement SELECT_PACKAGES_IN_POSTBOXES_BY_CLIENT_ID;
+    private static PreparedStatement SELECT_PACKAGES_IN_POSTBOX_BY_CLIENT_ID;
     private static PreparedStatement UPSERT_PACKAGE_IN_POSTBOX;
     private static PreparedStatement DELETE_PACKAGE_FROM_POSTBOX;
 
@@ -91,7 +91,7 @@ public class CassandraConnector {
             UPSERT_POSTBOX = session.prepare("INSERT INTO PostBox (postbox_id, district, capacity) VALUES (?, ?, ?);");
 
             SELECT_PACKAGES_IN_POSTBOX = session.prepare("SELECT * FROM PostBoxContent WHERE postbox_id = ?;");
-            SELECT_PACKAGES_IN_POSTBOXES_BY_CLIENT_ID = session.prepare("SELECT * FROM PostBoxContent WHERE client_id = ?;");
+            SELECT_PACKAGES_IN_POSTBOX_BY_CLIENT_ID = session.prepare("SELECT * FROM PostBoxContent WHERE postbox_id = ? AND client_id = ?;");
             UPSERT_PACKAGE_IN_POSTBOX = session.prepare("INSERT INTO PostBoxContent (postbox_id, package_id, client_id, is_ready_to_pickup) VALUES (?, ?, ?, ?);");
             DELETE_PACKAGE_FROM_POSTBOX = session.prepare("DELETE FROM PostBoxContent WHERE postbox_id = ? AND package_id = ?;");
 
@@ -278,14 +278,14 @@ public class CassandraConnector {
         return packages;
     }
 
-    public ArrayList<PackageModel> getPackagesInPostBoxesByClientID(String clientID) throws CassandraBackendException {
-        BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_POSTBOXES_BY_CLIENT_ID);
-        bs.bind(clientID);
+    public ArrayList<PackageModel> getPackagesInPostBoxByClientID(String postBoxID, String clientID) throws CassandraBackendException {
+        BoundStatement bs = new BoundStatement(SELECT_PACKAGES_IN_POSTBOX_BY_CLIENT_ID);
+        bs.bind(postBoxID, clientID);
         ResultSet rs = null;
         try {
             rs = session.execute(bs);
         } catch (Exception e) {
-            throw new CassandraBackendException("Could not perform a query getPackagesInPostBoxesByClientID. " + e.getMessage() + ".", e);
+            throw new CassandraBackendException("Could not perform a query getPackagesInPostBoxByClientID. " + e.getMessage() + ".", e);
         }
         ArrayList<PackageModel> packages = new ArrayList<>();
         for (Row row: rs) {
