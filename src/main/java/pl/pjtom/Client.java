@@ -29,10 +29,9 @@ public class Client implements Runnable {
             ArrayList<PackageModel> packagesForMe = cassClient.getPackagesInPostBoxByClientID(postBox.getPostBoxID(), clientModel.getClientID());
 
             for (PackageModel p: packagesForMe) {
-                if (!p.getWasPickedUp() && p.getIsReadyToPickup()) {
+                if (p.getIsReadyToPickup()) {
                     Date timestamp = new Date(System.currentTimeMillis());
                     p.setIsReadyToPickup(false);
-                    cassClient.updatePackageWasPickedUpFromPostBox(postBox.getPostBoxID(), p.getPackageID());
                     cassClient.deletePackageFromPostBox(postBox.getPostBoxID(), p.getPackageID());
                     cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX, timestamp, clientModel.getClientID(), p.getPostBoxID()));
                     System.out.println(clientModel.getClientID() + ": Taking package " + p.getPackageID() + " from postbox " + postBox.getPostBoxID());

@@ -8,8 +8,7 @@ public class PackageModel {
     private String districtDest;
     private String clientID;
     private String courierID;
-    private boolean isReadyToPickup = false;
-    private boolean wasPickedUp = false;
+    private boolean isReadyToPickup;
     private String postBoxID;
 
     public PackageModel() {
@@ -60,14 +59,6 @@ public class PackageModel {
         this.isReadyToPickup = isReadyToPickup;
     }
 
-    public boolean getWasPickedUp() {
-        return wasPickedUp;
-    }
-
-    public void setWasPickedUp(boolean wasPickedUp) {
-        this.wasPickedUp = wasPickedUp;
-    }
-
     public String getPostBoxID() {
         return postBoxID;
     }
@@ -80,7 +71,7 @@ public class PackageModel {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         Formatter fmt = new Formatter(sb);
-        fmt.format("{package_id: %s, courier_id: %s, district_dest: %s, client_id: %s, is_ready_to_pickup: %s, was_picked_up: %s}", packageID, courierID, districtDest, clientID, isReadyToPickup, wasPickedUp);
+        fmt.format("{package_id: %s, courier_id: %s, district_dest: %s, client_id: %s, is_ready_to_pickup: %s}", packageID, courierID, districtDest, clientID, isReadyToPickup);
         fmt.close();
         return sb.toString();
     }
