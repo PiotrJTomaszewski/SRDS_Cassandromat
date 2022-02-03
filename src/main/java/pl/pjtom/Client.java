@@ -49,6 +49,7 @@ public class Client implements Runnable {
                 Date timestamp = new Date(System.currentTimeMillis());
                 cassClient.deletePackageFromPostBox(entry.getKey(), p.getPackageID());
                 cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX, timestamp, clientModel.getClientID(), p.getPostBoxID()));
+                System.out.println("Taking package " + p.getPackageID() + " from postbox " + entry.getKey());
             }
         }
     }

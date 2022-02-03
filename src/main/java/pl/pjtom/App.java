@@ -5,7 +5,7 @@ import pl.pjtom.cassandra.CassandraConnector;
 
 public class App {
     public static void main(String[] args) {
-        System.out.println("Version: Lewie");
+        System.out.println("Version: Tayla");
         try {
             CassandraConnector cassClient = new CassandraConnector();
             String nodeAddress = args.length > 1 ? args[1] : "127.0.0.1";
