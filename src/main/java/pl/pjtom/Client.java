@@ -2,10 +2,7 @@ package pl.pjtom;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Random;
-import java.util.Map.Entry;
 
 import pl.pjtom.cassandra.CassandraBackendException;
 import pl.pjtom.cassandra.CassandraConnector;
@@ -20,7 +17,6 @@ public class Client implements Runnable {
     private ClientModel clientModel;
     private Random rand = new Random();
     private ArrayList<PostBoxModel> postBoxesInMyDistrict;
-    HashSet<String> pickedUpPackages = new HashSet<>();
 
     public Client(CassandraConnector cassClient, ClientModel clientModel) throws CassandraBackendException {
         this.cassClient = cassClient;
@@ -33,12 +29,11 @@ public class Client implements Runnable {
             ArrayList<PackageModel> packagesForMe = cassClient.getPackagesInPostBoxByClientID(postBox.getPostBoxID(), clientModel.getClientID());
 
             for (PackageModel p: packagesForMe) {
-                if (p.getIsReadyToPickup() && !pickedUpPackages.contains(p.getPackageID())) {
+                if (p.getIsReadyToPickup()) {
                     Date timestamp = new Date(System.currentTimeMillis());
                     p.setIsReadyToPickup(false);
                     cassClient.deletePackageFromPostBox(postBox.getPostBoxID(), p.getPackageID());
                     cassClient.upsertPackageLog(new PackageLogEntryModel(p.getPackageID(), PackageLogEvent.PICKUP_PACKAGE_FROM_POSTBOX, timestamp, clientModel.getClientID(), p.getPostBoxID()));
-                    pickedUpPackages.add(p.getPackageID());
                     System.out.println(clientModel.getClientID() + ": Taking package " + p.getPackageID() + " from postbox " + postBox.getPostBoxID());
                 }
             }

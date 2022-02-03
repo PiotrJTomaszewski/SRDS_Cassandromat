@@ -38,7 +38,7 @@ public class Menu {
                 terminal.println("\n======== Cassandromat ========");
                 String option = textIO.newStringInputReader().withNumberedPossibleValues("Upsert courier",
                         "List couriers", "Upsert district", "List districts", "Upsert client", "List clients",
-                        "Upsert postbox", "List postboxes", "List packages in postbox", "Upsert package in warehouse", "List packages in warehouse", "Generate random packages in warehouse", "Courier go on route", "Client go for packages")
+                        "Upsert postbox", "List postboxes", "List packages in postbox", "Remove package from postbox", "Upsert package in warehouse", "List packages in warehouse", "Generate random packages in warehouse", "Courier go on route", "Client go for packages")
                         .read("Choose option");
                 switch (option) {
                     case "Upsert courier":
@@ -67,6 +67,9 @@ public class Menu {
                         break;
                     case "List packages in postbox":
                         listPackagesInPostBox();
+                        break;
+                    case "Remove package from postbox":
+                        removePackageFromPostBox();
                         break;
                     case "Upsert package in warehouse":
                         upsertPackageInWarehouse();
@@ -183,6 +186,26 @@ public class Menu {
         String postBoxID = textIO.newStringInputReader().withNumberedPossibleValues(postBoxesInDistrictIDs).read("Postbox ID");
 
         displayPackages(cassClient.getPackagesInPostBox(postBoxID));
+    }
+
+    private void removePackageFromPostBox() throws CassandraBackendException {
+        ArrayList<String> districts = cassClient.getDistricts();
+        String district = textIO.newStringInputReader().withNumberedPossibleValues(districts).read("Districts");
+
+        ArrayList<PostBoxModel> postBoxesInDistrict = cassClient.getPostBoxesInDistrict(district);
+        ArrayList<String> postBoxesInDistrictIDs = new ArrayList<>();
+        for (PostBoxModel postBox: postBoxesInDistrict) {
+            postBoxesInDistrictIDs.add(postBox.getPostBoxID());
+        }
+        String postBoxID = textIO.newStringInputReader().withNumberedPossibleValues(postBoxesInDistrictIDs).read("Postbox ID");
+
+        ArrayList<PackageModel> packagesInPostBox = cassClient.getPackagesInPostBox(postBoxID);
+        ArrayList<String> packagesInPostBoxIDs = new ArrayList<>();
+        for (PackageModel p: packagesInPostBox) {
+            packagesInPostBoxIDs.add(p.getPackageID());
+        }
+        String packageID = textIO.newStringInputReader().withNumberedPossibleValues(packagesInPostBoxIDs).read("Package ID");
+        cassClient.deletePackageFromPostBox(postBoxID, packageID);
     }
 
     private void upsertPackageInWarehouse() throws CassandraBackendException {

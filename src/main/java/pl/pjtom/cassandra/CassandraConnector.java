@@ -4,7 +4,9 @@ import java.util.ArrayList;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
+import com.datastax.driver.core.ExecutionInfo;
 import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.QueryLogger;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Cluster.Builder;
@@ -21,11 +23,13 @@ import com.datastax.driver.core.Session;
 public class CassandraConnector {
     private Cluster cluster;
     private Session session;
+    // private static final Logger logger = LoggerFactory.getLogger(CassandraConnector.class);
 
     public void connect(String node, int port, String keyspace) throws CassandraBackendException {
-        Builder b = Cluster.builder().addContactPoint(node);
-        b.withPort(port);
+        Builder b = Cluster.builder().addContactPoint(node).withPort(port);
         cluster = b.build();
+        QueryLogger queryLogger = QueryLogger.builder().withConstantThreshold(100).build();
+        cluster.register(queryLogger);
         try {
             session =  cluster.connect(keyspace);
         } catch (Exception e) {
