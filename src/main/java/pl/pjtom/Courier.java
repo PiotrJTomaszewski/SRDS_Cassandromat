@@ -19,6 +19,7 @@ public class Courier implements Runnable {
     private CourierModel courierModel;
     private ArrayList<PackageModel> trunkContent = new ArrayList<>();
     String destinationDistrict;
+    private ArrayList<String> districts;
 
     public Courier(CassandraConnector cassClient, CourierModel courierModel) throws CassandraBackendException {
         this.cassClient = cassClient;
@@ -27,7 +28,10 @@ public class Courier implements Runnable {
 
     public void loadTheTrunk() throws CassandraBackendException {
         boolean stayAtWarehouse = true;
-        ArrayList<String> districts = cassClient.getDistricts();
+        if (districts == null) {
+            districts = cassClient.getDistricts();
+        }
+
         // Choose next trip destination district
         destinationDistrict = districts.get(rand.nextInt(districts.size()));
         while (stayAtWarehouse) {
