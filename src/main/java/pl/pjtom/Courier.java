@@ -72,7 +72,7 @@ public class Courier implements Runnable {
                 // }
             }
 
-            System.out.print("I have " + trunkContent.size() + "/" + courierModel.getCapacity() + " packages.");
+            System.out.println("I have " + trunkContent.size() + "/" + courierModel.getCapacity() + " packages.");
             if (trunkContent.size() == courierModel.getCapacity()) {
                 // System.out.println("Leaving the warehouse with a full trunk");
                 stayAtWarehouse = false;
