@@ -3,13 +3,11 @@ package pl.pjtom;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.function.BiConsumer;
 
 import org.beryx.textio.TerminalProperties;
 import org.beryx.textio.TextIO;
 import org.beryx.textio.TextIoFactory;
 import org.beryx.textio.TextTerminal;
-import org.beryx.textio.web.RunnerData;
 
 import de.vandermeer.asciitable.AsciiTable;
 import pl.pjtom.cassandra.CassandraBackendException;

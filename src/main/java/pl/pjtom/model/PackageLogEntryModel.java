@@ -2,7 +2,7 @@ package pl.pjtom.model;
 
 import java.util.Date;
 
-public class PackageLogEntryModel implements Comparable {
+public class PackageLogEntryModel implements Comparable<PackageLogEntryModel> {
     private String packageID;
     private PackageLogEvent actionType;
     private Date actionTime;
@@ -62,8 +62,8 @@ public class PackageLogEntryModel implements Comparable {
     }
 
     @Override
-    public int compareTo(Object arg0) {
-        PackageLogEntryModel other = (PackageLogEntryModel)arg0;
+    public int compareTo(PackageLogEntryModel val) {
+        PackageLogEntryModel other = (PackageLogEntryModel)val;
         return this.actionTime.compareTo(other.actionTime);
     }
 
